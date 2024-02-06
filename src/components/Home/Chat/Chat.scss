@@ -1,0 +1,24 @@
+.chat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: rgb(168, 224, 250);
+    &_message {
+        width: 70%;
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        text-align: start;
+        right: 0px;
+        background: rgb(171, 238, 223);
+        height: 87vh;
+    }
+    &_recent {
+        overflow: hidden;
+        width: 30%;
+        position: absolute;
+        left: 0px;
+        background: rgb(231, 171, 171);
+        height: 87vh;
+    }
+}

@@ -1,0 +1,91 @@
+.alert_success {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    background: #22ad03;
+    width: fit-content;
+    height: fit-content;
+    padding: 10px 20px;
+    position: fixed;
+    z-index: 999999999999;
+    // right: 10px;
+    top: 20px;
+    border-radius: 20px;
+    &{
+        animation: moveRight 5s linear infinite;
+        @keyframes moveRight {
+            0% { left: 0%; }
+            100% { left: 100%; }
+        }
+    }
+    
+    // & {
+    //     animation: fadeInOut 5s ease-in-out infinite alternate;
+    //     @keyframes fadeInOut {
+    //     0%, 100% { opacity: 1; }
+    //     50% { opacity: 0; }
+    //   }
+    // }
+      
+      
+    .alert_one {
+        text-align: center;
+        font-weight: 600;
+        font-size: 20px;
+        padding: 10px;
+        color: rgb(255, 255, 255);
+        border-bottom: 1px solid rgb(0, 0, 0); 
+        // width: 95%;
+    }
+    .alert_two {
+        text-align: center;
+        font-size: 15px;
+        color: rgb(0, 0, 0);
+    }
+}
+
+.alert_error {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    background: #bb4e40;
+    width: fit-content;
+    height: fit-content;
+    padding: 10px 20px;
+    position: fixed;
+    z-index: 999999999999;
+    // right: 10px;
+    top: 20px;
+    border-radius: 20px;
+    &{
+        animation: moveRight 5s linear forwards;
+        @keyframes moveRight {
+            0% { left: 0%; }
+            100% { left: 100%; }
+        }
+    }
+    
+    // & {
+    //     animation: fadeInOut 5s ease-in-out infinite alternate;
+    //     @keyframes fadeInOut {
+    //     0%, 100% { opacity: 1; }
+    //     50% { opacity: 0; }
+    //   }
+    // }
+      
+      
+    .alert_one {
+        text-align: center;
+        font-weight: 600;
+        font-size: 35px;
+        color: rgb(243, 243, 242);
+        border-bottom: 1px solid rgb(255, 255, 255); 
+        // width: 95%;
+        padding: 10px;
+    }
+    .alert_two {
+        text-align: center;
+        font-size: 25px;
+        color: rgb(232, 205, 213);
+    }
+}

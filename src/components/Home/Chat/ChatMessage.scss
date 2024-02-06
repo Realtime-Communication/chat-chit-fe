@@ -1,0 +1,147 @@
+.chat-message {
+    display: flex;
+    flex-direction: column;
+}
+.form_chat {
+    display: flex;
+    flex-direction: row;
+    bottom: 0px;
+    width: 100%;
+}
+.form_input {
+    width: 100%;
+    height: 8vh;
+    border-radius: 10px;
+    border: none;
+    box-shadow: none;
+    font-size: 20px;
+    background: rgb(236, 199, 132);
+    border: 1px solid rgb(255, 244, 44);
+}
+
+.form_submit {
+    width: 8.5%;
+    border: none;
+    border-radius: 15px;
+    margin-left: 3px;
+    background: rgb(255, 48, 48);
+    color: white;
+}
+
+.form_submit:hover {
+    background: rgb(83, 21, 21);
+    cursor: pointer;
+}
+.header-bar {
+    display: flex;
+    flex-direction: row;
+    height: 5vh;
+    padding: 5px;
+    width: auto;
+    background: rgb(242, 202, 127);
+    justify-content: space-between;
+    .call-icon{
+        height: 100%;
+        // width: 80%;
+        align-items: end;
+        img {
+            height: 100%;
+            width: auto;
+            // position: relative;
+            // right: -95%;
+            cursor: pointer;
+        }
+    }
+    .user-profile{
+        width: fit-content;
+        background: red;
+        color: white;
+        padding: 3px 5px;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    .user-profile:hover {
+        background: rgb(0, 114, 190);
+    }
+}
+.messages div:first-child {
+    margin: 2px;
+    display: flex;
+    flex-direction: column;
+}
+
+.messages {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; 
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+}
+.message-left {
+    width: 40%;
+    .user-coming {
+        color: rgb(255, 255, 255);
+        background: rgb(2, 165, 246);
+    }
+    .user-content {
+        background: rgb(227, 179, 59);
+        padding: 5px;
+        border-radius: 15px;
+    }
+}
+.message-right {
+    position: relative;
+    text-align: left;
+    width: 40%;
+    right: -59.7%;
+    .user-coming {
+        width: fit-content;
+        background: rgb(216, 102, 102);
+        text-align: right;
+        color: rgb(255, 255, 255);
+    }
+    .user-content {
+        background: rgb(18, 205, 215);
+        padding: 5px;
+        border-radius: 15px;
+    }
+}
+.user-coming {
+    border-radius: 10px;
+    padding: 3px;
+    width: fit-content;
+}
+i.message-content {
+    height: auto;
+    border-radius: 10px;
+    white-space: normal; 
+    word-wrap: break-word; 
+    text-align: left;
+    font-size: 25px;
+    img {
+        width: 100%;
+        height: auto;
+        border-radius: 15px;
+    }
+}
+.video-call {
+    cursor: move;
+    background: none;
+}
+
+
+// .messages::-webkit-scrollbar {
+//     width: 5px;
+// }
+// .messages::-webkit-scrollbar-track {
+//     background: #fd8b0a;
+// }
+// .messages::-webkit-scrollbar-thumb {
+//     background: #14822d;
+//     border-radius: 20px;
+// }
+// .messages::-webkit-scrollbar-thumb:hover {
+//     background: #555;
+// }

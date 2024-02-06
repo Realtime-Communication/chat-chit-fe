@@ -1,0 +1,80 @@
+.video-call {
+    width: 300px;
+    border-radius: 15px;
+    .button-call {
+        background: rgb(9, 171, 252);
+        overflow: hidden;
+        border-radius: 15px;
+        margin-bottom: 3px;
+        .call-from {
+            & {
+                white-space: nowrap;
+                animation: moveLeftToRight 4s linear infinite;
+            }
+            @keyframes moveLeftToRight {
+                0% {
+                    transform: translateX(-100%); 
+                }
+                100% {
+                    transform: translateX(100%);
+                }
+            }
+        }
+        button {
+            border: 5px solid rgb(228, 210, 6);
+            padding: 10px;
+            border-radius: 15px;
+            width: 45%;
+            margin: 1% 2.5%;
+            cursor: pointer;
+            
+        }
+        .call-ac {
+            font-weight: 700;
+            color: rgb(157, 162, 8);
+        }
+        button.give-up-call {
+            color: rgb(232, 63, 176);
+            background: white;
+            font-weight: 700;
+        }
+        button.start-call {
+            color: rgb(0, 179, 18);
+            background: white;
+            font-weight: 700;
+        }
+        button.start-call {
+            color: rgb(0, 179, 18);
+            background: white;
+            font-weight: 700;
+        }
+    }
+    .video-both {
+        display: flex;
+    }
+    .video-flex-column {
+        display: flex;
+        flex-direction: column;
+    }
+    .video-flex-row {
+        display: flex;
+        flex-direction: row;
+    }
+    // .my-video {
+    //     width: 100%;
+    //     height: auto;
+    //     video {
+    //         width: 100%;
+    //         height: auto;
+    //     }
+    // }
+    // .user-video {
+    //     height: auto;
+    //     width: 100%;
+    //     video {
+    //         height: auto;
+    //         width: 100%;
+    //     }
+    // }
+
+}

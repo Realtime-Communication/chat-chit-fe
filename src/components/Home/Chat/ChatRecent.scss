@@ -1,0 +1,38 @@
+.chat-recent {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overflow-y: auto;
+    height: 100%;
+    padding-right: 5px;
+    width: 100%;
+    margin-top: 16.5px;
+    text-align: center;
+    .recent-item {
+        cursor: pointer;
+        padding: 5px;
+        width: 90%;
+        margin: 8px 0;
+        font-size: 15px;
+        border-radius: 20px;
+        background: #ddd;
+    }
+    .current-recent {
+        background: rgb(2, 154, 2);
+        color: white;
+    }
+}
+
+.chat-recent::-webkit-scrollbar {
+    width: 5px;
+}
+.chat-recent::-webkit-scrollbar-track {
+    background: #fd8b0a;
+}
+.chat-recent::-webkit-scrollbar-thumb {
+    background: #14822d;
+    border-radius: 20px;
+}
+.chat-recent::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
