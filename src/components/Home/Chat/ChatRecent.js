@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import './ChatRecent.scss';
 import { ChatContext } from './Chat';
-import { TokenContext } from '../../../store/tokenContext';
 import { jwtDecode } from 'jwt-decode';
+import { getCookie } from '../../store/tokenContext';
 
 export function ChatsRecent() {
 
-    const {token} = useContext(TokenContext);
+    const token = getCookie('access_token');
     const { username, sub } = jwtDecode(token);
 
     const {isLoad, setIsLoad} = useContext(ChatContext);

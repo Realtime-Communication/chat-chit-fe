@@ -3,7 +3,8 @@
     flex-direction: column;
     justify-content: start;
     background: #22ad03;
-    width: fit-content;
+    // width: fit-content;
+    width: 50%;
     height: fit-content;
     padding: 10px 20px;
     position: fixed;
@@ -11,23 +12,7 @@
     // right: 10px;
     top: 20px;
     border-radius: 20px;
-    &{
-        animation: moveRight 5s linear infinite;
-        @keyframes moveRight {
-            0% { left: 0%; }
-            100% { left: 100%; }
-        }
-    }
-    
-    // & {
-    //     animation: fadeInOut 5s ease-in-out infinite alternate;
-    //     @keyframes fadeInOut {
-    //     0%, 100% { opacity: 1; }
-    //     50% { opacity: 0; }
-    //   }
-    // }
-      
-      
+  
     .alert_one {
         text-align: center;
         font-weight: 600;
@@ -43,13 +28,12 @@
         color: rgb(0, 0, 0);
     }
 }
-
 .alert_error {
     display: flex;
     flex-direction: column;
     justify-content: start;
     background: #bb4e40;
-    width: fit-content;
+    width: 50%;
     height: fit-content;
     padding: 10px 20px;
     position: fixed;
@@ -57,35 +41,33 @@
     // right: 10px;
     top: 20px;
     border-radius: 20px;
-    &{
-        animation: moveRight 5s linear forwards;
-        @keyframes moveRight {
-            0% { left: 0%; }
-            100% { left: 100%; }
-        }
-    }
-    
-    // & {
-    //     animation: fadeInOut 5s ease-in-out infinite alternate;
-    //     @keyframes fadeInOut {
-    //     0%, 100% { opacity: 1; }
-    //     50% { opacity: 0; }
-    //   }
-    // }
-      
-      
     .alert_one {
         text-align: center;
         font-weight: 600;
         font-size: 35px;
         color: rgb(243, 243, 242);
         border-bottom: 1px solid rgb(255, 255, 255); 
-        // width: 95%;
         padding: 10px;
     }
     .alert_two {
         text-align: center;
         font-size: 25px;
         color: rgb(232, 205, 213);
+    }
+}
+
+.fade_in_out {
+    animation: fadeInOut 3s ease-in-out infinite alternate;
+    @keyframes fadeInOut {
+        0%, 100% { opacity: 1;}
+        50% { opacity: 0.5; }
+    }
+}
+
+.left_to_right {
+    animation: moveRight 2s linear infinite;
+    @keyframes moveRight {
+        0% { left: 0%; }
+        100% { left: 50%; }
     }
 }

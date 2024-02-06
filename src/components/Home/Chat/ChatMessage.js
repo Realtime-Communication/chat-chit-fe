@@ -3,7 +3,7 @@ import './ChatMessage.scss'
 import { ChatContext } from './Chat';
 import { jwtDecode } from 'jwt-decode'
 import { insertMessage } from './InsertMessage'
-import { TokenContext } from '../../../store/tokenContext';
+import { getCookie } from '../../store/tokenContext';
 
 import socket from '../socket';
 import VideoCall from '../Call/Call';
@@ -12,7 +12,7 @@ import Error from '../alert/Error';
 export const ClickContext = createContext();
 
 export function ChatMessage() {
-    const {token} = useContext(TokenContext);
+    const token = getCookie('access_token');
     const { username, sub } = jwtDecode(token);
 
     //name of other friend
@@ -150,7 +150,7 @@ export function ChatMessage() {
             setCoop('');
             setOption('');
             setIsCall('none');
-            console.log('refuse')
+            console.log('refuse');
         })
         socket.on('complete_close_call', () => {
             console.log('complete_close_call');

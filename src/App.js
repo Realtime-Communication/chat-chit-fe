@@ -5,12 +5,9 @@ import Home from './components/Home/index';
 function App() {
   return (
     <>
-      <Routes>
-          <Route path="/" element={<Home/>} />
-      </Routes>
+      <Home/>
     </>
   );
 }
 
 export default App;
-

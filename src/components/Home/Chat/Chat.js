@@ -1,7 +1,7 @@
 import ChatMessage from './ChatMessage';
 import { ChatsRecent } from './ChatRecent';
 import './Chat.scss'
-import StateContextProvider from '../../../store/stateContext';
+import StateContextProvider from '../../store/stateContext';
 import { createContext, useState } from 'react';
 
 //A
