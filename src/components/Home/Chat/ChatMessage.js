@@ -52,8 +52,10 @@ export function ChatMessage() {
             }
         });
     }, [toId])
+
     // Render message recent with other friend now
     useEffect(() => {
+        const messages = document.querySelector("#messages");
         const elementRemove = document.querySelectorAll("#messages > div");
         if(elementRemove) {
             elementRemove.forEach((e) => {
@@ -61,10 +63,10 @@ export function ChatMessage() {
             })
         }
         (chatsFriendRecent || []).forEach((msg) => {
-            const messages = document.querySelector("#messages");
             const item = insertMessage(msg, sub);
             messages.appendChild(item);
         })
+        messages.scrollTop = messages.scrollHeight;
     }, [chatsFriendRecent])
 
     // SEND message to sever
@@ -92,6 +94,7 @@ export function ChatMessage() {
                         const messages = document.querySelector("#messages");
                         const item = insertMessage(msg, sub);
                         messages.appendChild(item);
+                        messages.scrollTop = messages.scrollHeight;
                     } else if (msg.to_id === sub) {
                         setAlertTag(<Success value={[`Has message from ${msg.from} !`, [msg.content]]}/>);
                         setTimeout(() => {
@@ -108,17 +111,18 @@ export function ChatMessage() {
     const checkProfile = (e) => {
         console.log("checkProfile");
     };
-    
-    const [option, setOption] = useState();
 
-    //The friend is call curent
+/////////////////////////////////////          << SECTION FOR CALL >>        //////////////////////////////////////////////////
+
+    // The ID of otherfriend that passed in call component to call by user
+    const [option, setOption] = useState();
+    //The friend is call current
     const [coop, setCoop] = useState('');
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Sender call
     const goCall = (e) => {
        if(isCall == 'none') {
-            setCoop(toId);
+            setCoop(otherName);
             setOption(toId);
             setIsCall('flex');
        } else {
@@ -136,16 +140,15 @@ export function ChatMessage() {
                 setAlertTag('');
             }, 5000)
         });
-        // Open call and confirm call
+        // Open call component and confirm call
         socket.on('open_call', (data) => {
             setIsCall('flex');
-            setCoop(data.callerId);
+            setCoop(data.from);
         });
-        socket.on('close_call', (data) => {
-            setCoop('');
-            setOption('');
-            // setIsCall('none');
-        });
+        // socket.on('close_call', (data) => {
+        //     setCoop('');
+        //     setOption('');
+        // });
         socket.on('refuse_call', () => {
             setCoop('');
             setOption('');
@@ -165,13 +168,13 @@ export function ChatMessage() {
         });
     }, []);
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     return (
         <>
             {alertTag}
             <div className='header-bar'>
                 <div className='user-profile' onClick = { checkProfile }><b>{otherName ? otherName.slice(otherName.lastIndexOf(' '), otherName.length) : 'All'}</b></div>
-                <div className='call-icon'><img onClick = { goCall } className='call-icon' src={isCall == 'none' ? 'https://cdn-icons-png.flaticon.com/128/901/901141.png' : 'https://cdn-icons-png.flaticon.com/128/9999/9999340.png'} /> </div>
+                <div className='call-icon'><img onClick = { goCall } className='call-icon' src={isCall == 'none' ? 'https://cdn-icons-png.flaticon.com/128/901/901141.png' : 'https://cdn-icons-png.flaticon.com/128/9999/9999340.png'} />{coop} </div>
                 <div className='user-profile' onClick = { checkProfile }> Mình là <b>{username.slice(username.lastIndexOf(' '), username.length)}</b></div>
             </div>
             <div className='view-profile'></div>

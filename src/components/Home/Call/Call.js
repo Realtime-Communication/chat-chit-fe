@@ -173,7 +173,7 @@ function VideoCall(props) {
                                         receiverId: props.props,
                                         callerId: sub
                                     });
-                                    setTimeout(() => callUser(props.props), 100);
+                                    setTimeout(() => callUser(props.props), 1000);
                                 }}
                             >
                                 Start Call
