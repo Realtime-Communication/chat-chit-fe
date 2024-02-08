@@ -23,7 +23,7 @@ export function ChatsRecent() {
     const [chatRecent, setChatRecent] = useState([]);
 
     useEffect(() => {
-        fetch(`http://localhost:8000/chats/api/friendschats`, {
+        fetch(`https://quinerrealtime.onrender.com/chats/api/friendschats`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
