@@ -38,7 +38,7 @@ export function ChatMessage() {
 
     // Get message recent with other friend now
     useEffect(() => {
-        fetch(`https://quinerrealtime.onrender.com/${toId}`, {
+        fetch(`https://quinerrealtime.onrender.com/chats/api/GetChatWithId/${toId}`, {
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${token}`,
