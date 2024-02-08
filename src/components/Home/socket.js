@@ -14,7 +14,7 @@ const getCookie = (cookieName) => {
 const token = getCookie('access_token');
 const { username, sub } = jwtDecode(token);
 
-const socket = io("http://localhost:8000/", {
+const socket = io("https://quinerrealtime.onrender.com/", {
     autoConnect: true
 });
 socket.emit("initial", {
