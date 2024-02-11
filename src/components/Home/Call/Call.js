@@ -261,7 +261,7 @@ function VideoCall(props) {
         </Draggable>
         <div className="option-call">
             {optionCall ? 
-                <>
+                <div className="option-call">
                 <button onClick={() => callUser(props.props)} >Start Call</button>
                 <button onClick={() => leaveCall()} >Stop Call</button>
                 <button onClick={() => {
@@ -270,7 +270,13 @@ function VideoCall(props) {
                         });
                     }}>Give Up</button>
                 <button onClick={() => refuseCall()}>Refuse</button>
-                <button onClick={() => setOptionCall(false)} className="button-option"> Close Option </button></>
+                <button onClick={(e) => {
+                    const target = e.target.parentNode;
+                    if(target) target.classList.toggle('option-column');
+                    console.log(target);
+                }}>C.Direction</button>
+                <button onClick={() => setOptionCall(false)} className="button-option"> Close Option </button>
+                </div>
             :
                 <button onClick={() => setOptionCall(true)} className="button-option"> Option Call </button>
             }
