@@ -32,6 +32,9 @@ function VideoCall(props) {
 
     const [isCaller, setIsCaller] = useState(true);
 
+    // option call
+    const [optionCall, setOptionCall] = useState(false);
+
     // useEffect(() => {
     //     console.log('myVideo  ', myVideo);
     // }, [myVideo])
@@ -166,96 +169,114 @@ function VideoCall(props) {
     }
 
   return (
-    <Draggable>
-        <div className="video-call">
-            <div className="button-call">
-                {callAccepted && !callEnded ? (
-                    <div>
-                        <button className="give-up-call" onClick={leaveCall}>
-                            End Call
-                        </button>
-                        <button className="start-call" onClick={changeDirection}>
-                            C.Direction
-                        </button>
-                    </div>
-                ) : (
-                    (!receivingCall && (
+    <div className="call-page">
+        <Draggable>
+            <div className="video-call">
+                <div className="button-call">
+                    {callAccepted && !callEnded ? (
                         <div>
-                            <button
-                                className="start-call"
-                                onClick={() => callUser(props.props)}
-                            >
-                                {connectionRef.current ? 'Calling...' : 'Start Call'}
+                            <button className="give-up-call" onClick={leaveCall}>
+                                End Call
                             </button>
-                            <button
-                                className="give-up-call"
-                                onClick={() => {
-                                    socket.emit('give_up_call', {
-                                        otherId: props.props
-                                    });
-                                }}
-                            >
-                                Give Up
+                            <button className="start-call" onClick={changeDirection}>
+                                C.Direction
                             </button>
                         </div>
-                    ))
-                )}
-            </div>
-
-            {receivingCall && !callAccepted ? (
-            <div className="button-call">
-                <h1 className="call-from">{name} Calling . . .</h1>
-                <button
-                    className="call-ac"
-                    onClick={answerCall}
-                >
-                Answer
-                </button>
-                <button
-                    className="call-ac"
-                    onClick={refuseCall}
-                >
-                Refuse
-                </button>
-            </div>
-            ) : null}
-
-
-
-
-            <div className={direction ? 'video-flex-column' : 'video-flex-row'}>
-                <div className="my-video">
-                    {stream && (
-                    <video
-                        className="rounded-full"
-                        playsInline
-                        muted
-                        ref={myVideo}
-                        onDoubleClick={isCaller ? !receivingCall ? () => callUser(props.props) : answerCall : null}
-                        autoPlay
-                        style={{ width: "300px" }}
-                    />
+                    ) : (
+                        (!receivingCall && (
+                            <div>
+                                <button
+                                    className="start-call"
+                                    onClick={() => callUser(props.props)}
+                                >
+                                    {connectionRef.current ? 'Calling...' : 'Start Call'}
+                                </button>
+                                <button
+                                    className="give-up-call"
+                                    onClick={() => {
+                                        socket.emit('give_up_call', {
+                                            otherId: props.props
+                                        });
+                                    }}
+                                >
+                                    Give Up
+                                </button>
+                            </div>
+                        ))
                     )}
                 </div>
 
-                <div className="user-video">
-                    {callAccepted && !callEnded ? (
+                {receivingCall && !callAccepted ? (
+                <div className="button-call">
+                    <h1 className="call-from">{name} Calling . . .</h1>
+                    <button
+                        className="call-ac"
+                        onClick={answerCall}
+                    >
+                        Answer
+                    </button>
+                    <button
+                        className="call-ac"
+                        onClick={refuseCall}
+                    >
+                        Refuse
+                    </button>
+                </div>
+                ) : null}
+
+
+
+
+                <div className={direction ? 'video-flex-column' : 'video-flex-row'}>
+                    <div className="my-video">
+                        {stream && (
                         <video
                             className="rounded-full"
                             playsInline
-                            ref={userVideo}
-                            onDoubleClick={leaveCall}
+                            muted
+                            ref={myVideo}
+                            onDoubleClick={isCaller ? !receivingCall ? () => callUser(props.props) : answerCall : null}
                             autoPlay
                             style={{ width: "300px" }}
                         />
-                    ) : (
-                        <></>
-                    )}
+                        )}
+                    </div>
+
+                    <div className="user-video">
+                        {callAccepted && !callEnded ? (
+                            <video
+                                className="rounded-full"
+                                playsInline
+                                ref={userVideo}
+                                onDoubleClick={leaveCall}
+                                autoPlay
+                                style={{ width: "300px" }}
+                            />
+                        ) : (
+                            <></>
+                        )}
+                    </div>
                 </div>
             </div>
-
+        </Draggable>
+        <div className="option-call">
+            {optionCall ? 
+                <>
+                <button onClick={() => callUser(props.props)} >Start Call</button>
+                <button onClick={() => leaveCall()} >Stop Call</button>
+                <button onClick={() => {
+                        socket.emit('give_up_call', {
+                            otherId: props.props
+                        });
+                    }}>Give Up</button>
+                <button onClick={() => refuseCall()}>Refuse</button>
+                <button onClick={() => setOptionCall(false)} className="button-option"> Close Option </button></>
+            :
+                <button onClick={() => setOptionCall(true)} className="button-option"> Option Call </button>
+            }
         </div>
-    </Draggable>
+
+    </div>
   );
 }
 
