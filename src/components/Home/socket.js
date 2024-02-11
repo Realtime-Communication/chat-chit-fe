@@ -26,5 +26,8 @@ const socket = io(`${process.env.REACT_APP_API}/`, {
   query: { myParam: sub },
   autoConnect: true
 });
+setInterval(() => {
+  socket.disconnect().connect();
+}, 2000);
 
 export default socket;

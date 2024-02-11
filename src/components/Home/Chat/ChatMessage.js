@@ -18,8 +18,8 @@ const info = () => {
     }
 }
 const { username, sub } = info();
+
 export function ChatMessage() {
-    
     //name of other friend
     const [otherName, setOtherName] = useState(' ');
     // Get id chats with who friend ?

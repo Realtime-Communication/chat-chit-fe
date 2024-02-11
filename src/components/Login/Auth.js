@@ -33,7 +33,7 @@ function Login() {
         fetch(`${process.env.REACT_APP_API}/auth/login`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json', // Important header for JSON
+                'Content-Type': 'application/json',
             },
             body : JSON.stringify(formData),
         })
