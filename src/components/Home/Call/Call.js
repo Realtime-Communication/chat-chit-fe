@@ -30,6 +30,8 @@ function VideoCall(props) {
     const connectionRef = useRef(null);
     const myVideo = useRef({});
 
+    const [isCaller, setIsCaller] = useState(true);
+
     // useEffect(() => {
     //     console.log('myVideo  ', myVideo);
     // }, [myVideo])
@@ -71,11 +73,12 @@ function VideoCall(props) {
     }, []);
     
     const callUser = (id) => {
+        setIsCaller(false);
         console.log("call uer 1");
         socket.emit('sendMessage', {
             from_id: sub,
             from: username,
-            content: `<b>We are have a video call from ${username}</b>`,
+            content: `____<<We are have a video call from ${username}>>____`,
             to_id: id
         });
         const peer = new Peer({
@@ -100,7 +103,8 @@ function VideoCall(props) {
             }
         });
 
-        socket.on("callAccepted", (signal) => {
+        socket.once("callAccepted", (signal) => {
+            console.log('user had acept');
             setCallAccepted(true);
             peer.signal(signal);
         });
@@ -109,6 +113,7 @@ function VideoCall(props) {
     };
 
     const answerCall = () => {
+        setIsCaller(false);
         console.log('click ac');
         setCallAccepted(true);
         const peer = new Peer({
@@ -141,10 +146,12 @@ function VideoCall(props) {
         setCallEnded(true);
         if (connectionRef.current) {
             try {
-                setStream(null);
-                console.log("repare destroy");
+                console.log("repare removeStream");
                 connectionRef.current.removeStream(stream);
-                console.log("Had destroy");
+                if (connectionRef.current.writable) {
+                    connectionRef.current.send('something');
+                    console.log('has write something');
+                }
             } catch (error) {
                 console.log(error);
             }
@@ -178,7 +185,7 @@ function VideoCall(props) {
                                 className="start-call"
                                 onClick={() => callUser(props.props)}
                             >
-                                Start Call
+                                {connectionRef.current ? 'Calling...' : 'Start Call'}
                             </button>
                             <button
                                 className="give-up-call"
@@ -224,6 +231,7 @@ function VideoCall(props) {
                         playsInline
                         muted
                         ref={myVideo}
+                        onDoubleClick={isCaller ? !receivingCall ? () => callUser(props.props) : answerCall : null}
                         autoPlay
                         style={{ width: "300px" }}
                     />
@@ -236,6 +244,7 @@ function VideoCall(props) {
                             className="rounded-full"
                             playsInline
                             ref={userVideo}
+                            onDoubleClick={leaveCall}
                             autoPlay
                             style={{ width: "300px" }}
                         />

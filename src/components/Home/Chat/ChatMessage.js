@@ -38,6 +38,8 @@ export function ChatMessage() {
     const inputRef = useRef(null);
     // chat recent
     const [messageRecent, setMessageRecent] = useState([]);
+    // submit button
+    const submitRef = useRef(null);
    
 
     //GET ID OTHER FRIEND
@@ -139,7 +141,7 @@ export function ChatMessage() {
             setOption(toId);
             setIsCall('flex');
        } else {
-            window.alert('To End Up Call, You Must Click `End Call` On View Call');
+            window.alert('To CALL doubleClick on `your` screen! \nTo STOP doubleClick on `other` screen \nOr You Can Click Button On Scrren !');
        }
     };
     // Receiver call
@@ -162,14 +164,14 @@ export function ChatMessage() {
         
         socket.on('refuse_call', () => {
             setCoop('');
-            setOption('');
+            setOption(null);
             setIsCall('none');
             console.log('refuse');
         })
         socket.on('complete_close_call', () => {
             console.log('complete_close_call');
             setCoop('');
-            setOption('');
+            setOption(null);
             setIsCall('none');
             setResetCall(false);
         });
@@ -201,8 +203,8 @@ export function ChatMessage() {
             </div>
             <div className='chat-message'>
                 <form id="form" className="form_chat" action="">
-                    <textarea ref={inputRef} onInput={typing} className='form_input' row="1" placeholder=" Type here something..." style={{resize: 'vertical', maxHeight: '25vh', minHeight: "5vh"}} id="input" autocomplete="off"/>
-                    <button className='form_submit' onClick = { onSubmit } >Send</button>
+                    <textarea ref={inputRef} onInput={typing} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey ? submitRef.current.click() : ''} className='form_input' row="1" placeholder=" Type here something..." style={{resize: 'vertical', maxHeight: '25vh', minHeight: "5vh"}} id="input" autocomplete="on"/>
+                    <button ref={submitRef} className='form_submit' onClick = { onSubmit } >Send</button>
                 </form>
             </div>
         </>
