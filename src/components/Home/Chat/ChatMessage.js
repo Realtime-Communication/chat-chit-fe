@@ -141,7 +141,7 @@ export function ChatMessage() {
             setOption(toId);
             setIsCall('flex');
        } else {
-            window.alert('To CALL doubleClick on `your` screen! \nTo STOP doubleClick on `other` screen \nOr You Can Click Button On Scrren !');
+            window.alert('To CALL/ANSWER doubleClick on `your` screen! \nTo STOP doubleClick on `other` screen \nOr You Can Click Button On Scrren !');
        }
     };
     // Receiver call
@@ -167,6 +167,7 @@ export function ChatMessage() {
             setOption(null);
             setIsCall('none');
             console.log('refuse');
+            setResetCall(false);
         })
         socket.on('complete_close_call', () => {
             console.log('complete_close_call');
@@ -179,6 +180,7 @@ export function ChatMessage() {
             setCoop('');
             setOption('');
             setIsCall('none');
+            setResetCall(false);
         });
     }, []);
     useEffect(() => {
