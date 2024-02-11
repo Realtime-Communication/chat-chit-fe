@@ -2,19 +2,24 @@ import React, { useContext, useEffect, useState ,createContext, useRef} from 're
 import './ChatMessage.scss'
 import { ChatContext } from './Chat';
 import { jwtDecode } from 'jwt-decode'
-import { insertMessage } from './InsertMessage'
 import { getCookie } from '../../store/tokenContext';
-
-import socket from '../socket';
+import InsertMessage from './InsertMessage';
 import VideoCall from '../Call/Call';
 import Success from '../alert/Success';
 import Error from '../alert/Error';
+import socket from '../socket';
 export const ClickContext = createContext();
-
+const token = getCookie('access_token');
+const info = () => {
+    try {
+        return jwtDecode(token);
+    } catch (error) {
+        return {};
+    }
+}
+const { username, sub } = info();
 export function ChatMessage() {
-    const token = getCookie('access_token');
-    const { username, sub } = jwtDecode(token);
-
+    
     //name of other friend
     const [otherName, setOtherName] = useState(' ');
     // Get id chats with who friend ?
@@ -25,20 +30,25 @@ export function ChatMessage() {
     const [ chatsFriendRecent, setChatsFriendRecent ] = useState([]);
     // is call
     const [isCall, setIsCall] = useState('none');
-   // calling
-   const [calling, setCalling] = useState('');
-   // Alert tag
-   const [alertTag, setAlertTag] = useState('');
+    // calling
+    const [calling, setCalling] = useState('');
+    // Alert tag
+    const [alertTag, setAlertTag] = useState('');
+    // Input of chat from
+    const inputRef = useRef(null);
+    // chat recent
+    const [messageRecent, setMessageRecent] = useState([]);
+   
 
     //GET ID OTHER FRIEND
     useEffect(() => {
         setToId(isLoad);
+        inputRef.current.focus();
     }, [isLoad])
-
 
     // Get message recent with other friend now
     useEffect(() => {
-        fetch(`https://quinerrealtime.onrender.com/chats/api/GetChatWithId/${toId}`, {
+        fetch(`${process.env.REACT_APP_API}/chats/api/GetChatWithId/${toId}`, {
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -50,22 +60,18 @@ export function ChatMessage() {
                 setChatsFriendRecent(data.chats);
                 setOtherName(data.otherName);
             }
-        });
+        })
+        .catch(err => console.error(err));
     }, [toId])
 
     // Render message recent with other friend now
     useEffect(() => {
         const messages = document.querySelector("#messages");
-        const elementRemove = document.querySelectorAll("#messages > div");
-        if(elementRemove) {
-            elementRemove.forEach((e) => {
-                e.remove();
-            })
-        }
+        const old = [];
         (chatsFriendRecent || []).forEach((msg) => {
-            const item = insertMessage(msg, sub);
-            messages.appendChild(item);
+            old.push(<InsertMessage props={[msg, sub]}/>);
         })
+        setMessageRecent(old);
         messages.scrollTop = messages.scrollHeight;
     }, [chatsFriendRecent])
 
@@ -82,7 +88,13 @@ export function ChatMessage() {
                 to_id: toId
             });
             input.value = '';
+            inputRef.current.focus();
         }
+    }
+
+    // user is typing
+    const typing = (e) => {
+        socket.emit('typing', {otherId: toId})
     }
 
     // RENDER incoming message realtime
@@ -91,10 +103,7 @@ export function ChatMessage() {
             if (!socket.current) {
                 socket.on("messageComing", (msg) => {
                     if((msg.from_id === sub && msg.to_id === toId)  || (msg.to_id === sub && msg.from_id === toId)) {
-                        const messages = document.querySelector("#messages");
-                        const item = insertMessage(msg, sub);
-                        messages.appendChild(item);
-                        messages.scrollTop = messages.scrollHeight;
+                        setMessageRecent([...messageRecent, ...[<InsertMessage props={[msg, sub]}/>]]);
                     } else if (msg.to_id === sub) {
                         setAlertTag(<Success value={[`Has message from ${msg.from} !`, [msg.content]]}/>);
                         setTimeout(() => {
@@ -102,34 +111,37 @@ export function ChatMessage() {
                         }, 5000)
                     }
                 });
+                const messages = document.querySelector("#messages");
+                messages.scrollTop = messages.scrollHeight;
             }
         })();
         return function cleanup() {socket.off('messageComing')}
-    }, [toId]); 
+    }, [toId, messageRecent]); 
 
     //Check Profile 
     const checkProfile = (e) => {
         console.log("checkProfile");
     };
 
-/////////////////////////////////////          << SECTION FOR CALL >>        //////////////////////////////////////////////////
+////////////////////////////////////////////       << SECTION FOR CALL >>       //////////////////////////////////////////////////
 
     // The ID of otherfriend that passed in call component to call by user
     const [option, setOption] = useState();
     //The friend is call current
     const [coop, setCoop] = useState('');
 
+    const [resetCall, setResetCall] = useState(true);
+
     //Sender call
     const goCall = (e) => {
-       if(isCall == 'none') {
-            setCoop(otherName);
+       if(isCall === 'none') {
+            setCoop('You calling to '+ otherName);
             setOption(toId);
             setIsCall('flex');
        } else {
             window.alert('To End Up Call, You Must Click `End Call` On View Call');
        }
     };
-    
     // Receiver call
     useEffect(() => {
         // user no online
@@ -139,16 +151,15 @@ export function ChatMessage() {
             setTimeout(() => {
                 setAlertTag('');
             }, 5000)
+            setOption('');
+            setCoop('');
         });
         // Open call component and confirm call
         socket.on('open_call', (data) => {
             setIsCall('flex');
-            setCoop(data.from);
+            setCoop(data.callerName + ' calling to you');
         });
-        // socket.on('close_call', (data) => {
-        //     setCoop('');
-        //     setOption('');
-        // });
+        
         socket.on('refuse_call', () => {
             setCoop('');
             setOption('');
@@ -160,6 +171,7 @@ export function ChatMessage() {
             setCoop('');
             setOption('');
             setIsCall('none');
+            setResetCall(false);
         });
         socket.on('give_up_call', () => {
             setCoop('');
@@ -167,6 +179,9 @@ export function ChatMessage() {
             setIsCall('none');
         });
     }, []);
+    useEffect(() => {
+        if(!resetCall) setResetCall(true);
+    }, [resetCall])
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     return (
@@ -178,14 +193,16 @@ export function ChatMessage() {
                 <div className='user-profile' onClick = { checkProfile }> Mình là <b>{username.slice(username.lastIndexOf(' '), username.length)}</b></div>
             </div>
             <div className='view-profile'></div>
-            <div className="messages" id="messages"></div>
+            <div className="messages" id="messages">
+                {(messageRecent || []).map((item, index) => <div key={index} className='message-can-dalete'>{item}</div>)}
+            </div>
             <div className='video-call' style={{display: isCall}}>
-                {isCall == 'flex' ?  <VideoCall props={option}/> : <></>}
+                {resetCall ? <VideoCall props={option}/> : <></>}
             </div>
             <div className='chat-message'>
                 <form id="form" className="form_chat" action="">
-                    <textarea className='form_input' row="1" placeholder=" Type here something..." style={{resize: 'vertical', maxHeight: '25vh', minHeight: "5vh"}} id="input" autocomplete="off"/>
-                    <button className='form_submit' onClick = { onSubmit }>Send</button>
+                    <textarea ref={inputRef} onInput={typing} className='form_input' row="1" placeholder=" Type here something..." style={{resize: 'vertical', maxHeight: '25vh', minHeight: "5vh"}} id="input" autocomplete="off"/>
+                    <button className='form_submit' onClick = { onSubmit } >Send</button>
                 </form>
             </div>
         </>

@@ -1,15 +1,22 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
-import socket from "../socket";
 import { jwtDecode } from "jwt-decode";
 import { getCookie } from "../../store/tokenContext";
 import { ClickContext } from "../Chat/ChatMessage";
 import Draggable, {DraggableCore} from "react-draggable";
 import './call.scss'
+import socket from "../socket";
+const token = getCookie('access_token');
+const info = () => {
+    try {
+        return jwtDecode(token);
+    } catch (error) {
+        return {};
+    }
+}
+const { username, sub } = info();
 function VideoCall(props) {
-    const token = getCookie('access_token');
-    const { username, sub } = jwtDecode(token);
-    const [me, setMe] = useState("");
+    
     const [stream, setStream] = useState(null);
     const [receivingCall, setReceivingCall] = useState(false);
     const [caller, setCaller] = useState("");
@@ -64,12 +71,20 @@ function VideoCall(props) {
     }, []);
     
     const callUser = (id) => {
+        console.log("call uer 1");
+        socket.emit('sendMessage', {
+            from_id: sub,
+            from: username,
+            content: `<b>We are have a video call from ${username}</b>`,
+            to_id: id
+        });
         const peer = new Peer({
             initiator: true,
             trickle: false,
             stream: stream,
         });
-        peer.on("signal", (data) => {
+        peer.once("signal", (data) => {
+            console.log("call uer 2");
             socket.emit("callUser", {
                 userToCall: id,
                 signalData: data,
@@ -78,7 +93,7 @@ function VideoCall(props) {
             });
         });
 
-        peer.on("stream", (stream) => {
+        peer.once("stream", (stream) => {
             if (userVideo.current) {
                 userVideo.current.srcObject = stream;
                 console.log("at nguoi goi");
@@ -86,37 +101,34 @@ function VideoCall(props) {
         });
 
         socket.on("callAccepted", (signal) => {
-        setCallAccepted(true);
-        peer.signal(signal);
+            setCallAccepted(true);
+            peer.signal(signal);
         });
 
         connectionRef.current = peer;
     };
 
     const answerCall = () => {
-        try {
-            setCallAccepted(true);
-            const peer = new Peer({
-                initiator: false,
-                trickle: false,
-                stream: stream,
-            });
+        console.log('click ac');
+        setCallAccepted(true);
+        const peer = new Peer({
+            initiator: false,
+            trickle: false,
+            stream: stream,
+        });
 
-            peer.on("signal", (data) => {
-                socket.emit("answerCall", { signal: data, to: caller });
-            });
+        peer.once("signal", (data) => {
+            socket.emit("answerCall", { signal: data, to: caller });
+        });
 
-            peer.on("stream", (stream) => {
-            if (userVideo.current) {
-                console.log("at nguoi nghe");
-                userVideo.current.srcObject = stream;
-            }
-            });
-            peer.signal(callerSignal);
-            connectionRef.current = peer;
-        } catch (error) {
-            console.log("errer answer")
+        peer.once("stream", (stream) => {
+        if (userVideo.current) {
+            console.log("at nguoi nghe");
+            userVideo.current.srcObject = stream;
         }
+        });
+        peer.signal(callerSignal);
+        connectionRef.current = peer;
     };
 
     const refuseCall = (e) => {
@@ -127,21 +139,17 @@ function VideoCall(props) {
 
     const leaveCall = () => {
         setCallEnded(true);
-        socket.emit('complete_close_call', {});
         if (connectionRef.current) {
             try {
                 setStream(null);
                 console.log("repare destroy");
-                connectionRef.current.destroy();
+                connectionRef.current.removeStream(stream);
                 console.log("Had destroy");
-                if (connectionRef.current.writable) {
-                    connectionRef.current.send('something');
-                    console.log('has write something');
-                }
             } catch (error) {
                 console.log(error);
             }
         }
+        socket.emit('complete_close_call', {});
     };
 
     // Direction video
@@ -168,13 +176,7 @@ function VideoCall(props) {
                         <div>
                             <button
                                 className="start-call"
-                                onClick={() => {
-                                    socket.emit('open_call', {
-                                        receiverId: props.props,
-                                        callerId: sub
-                                    });
-                                    setTimeout(() => callUser(props.props), 1000);
-                                }}
+                                onClick={() => callUser(props.props)}
                             >
                                 Start Call
                             </button>

@@ -9,17 +9,22 @@ const getCookie = (cookieName) => {
         return cookie.substring(cookieName.length + 1);
       }
     }
-    return null;
+    return '';
 }
 const token = getCookie('access_token');
-const { username, sub } = jwtDecode(token);
 
-const socket = io("https://quinerrealtime.onrender.com/", {
-    autoConnect: true
+const info = () => {
+  try {
+      return jwtDecode(token);
+  } catch (error) {
+      return {};
+  }
+}
+const { username, sub } = info();
+
+const socket = io(`${process.env.REACT_APP_API}/`, {
+  query: { myParam: sub },
+  autoConnect: true
 });
-socket.emit("initial", {
-    userName: username,
-    id: sub
-})
 
 export default socket;

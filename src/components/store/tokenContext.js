@@ -1,5 +1,3 @@
-
-
 export const getCookie = (cookieName) => {
     const cookies = document.cookie.split(';');
     for (let i = 0; i < cookies.length; i++) {
@@ -8,6 +6,6 @@ export const getCookie = (cookieName) => {
         return cookie.substring(cookieName.length + 1);
       }
     }
-    return null;
+    return '';
 }
 

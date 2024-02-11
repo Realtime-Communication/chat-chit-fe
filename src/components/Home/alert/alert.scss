@@ -24,8 +24,9 @@
     }
     .alert_two {
         text-align: center;
+        overflow: hidden;
         font-size: 15px;
-        color: rgb(0, 0, 0);
+        color: rgb(255, 255, 255);
     }
 }
 .alert_error {

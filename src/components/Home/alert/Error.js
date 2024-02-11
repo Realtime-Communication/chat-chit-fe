@@ -4,7 +4,7 @@ export function Error(props){
     const [changeClass, setChangeClass] = useState('fade_in_out');
     setTimeout(() =>{
         setChangeClass('left_to_right');
-    }, 3000)
+    }, 2000)
     return (
         <>
             <div className={'alert_error ' + changeClass}>
