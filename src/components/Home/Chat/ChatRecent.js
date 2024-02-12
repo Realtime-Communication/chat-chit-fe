@@ -33,6 +33,11 @@ export function ChatsRecent() {
         if(before[0]) before[0].classList.remove("current-recent");
         target.classList.add("current-recent");
         setIsLoad(target.getAttribute('data-id'));
+        // fetch(`${process.env.REACT_APP_API}/chats/api/seen/${target.getAttribute('data-id')}`, {
+        //     headers: {
+        //         Authorization: `Bearer ${token}`,
+        //     }
+        // })
     }
 
     const [chatRecent, setChatRecent] = useState([]);

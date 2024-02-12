@@ -262,20 +262,30 @@ function VideoCall(props) {
         <div className="option-call">
             {optionCall ? 
                 <div className="option-call">
-                <button onClick={() => callUser(props.props)} >Start Call</button>
-                <button onClick={() => leaveCall()} >Stop Call</button>
-                <button onClick={() => {
-                        socket.emit('give_up_call', {
-                            otherId: props.props
-                        });
-                    }}>Give Up</button>
-                <button onClick={() => refuseCall()}>Refuse</button>
-                <button onClick={(e) => {
-                    const target = e.target.parentNode;
-                    if(target) target.classList.toggle('option-column');
-                    console.log(target);
-                }}>C.Direction</button>
-                <button onClick={() => setOptionCall(false)} className="button-option"> Close Option </button>
+                
+                    {callAccepted && !callEnded ?
+                        
+                        <button onClick={() => leaveCall()} >Stop Call</button>
+                    :
+                        (!receivingCall && 
+                            <><button onClick={() => callUser(props.props)} >Start Call</button>
+                            <button onClick={() => {
+                                    socket.emit('give_up_call', {
+                                        otherId: props.props
+                                    });
+                            }}>Give Up</button></>
+                        )
+                    }
+                    {receivingCall && !callAccepted ?
+                        <><button onClick={() =>answerCall()} >Answer</button>
+                        <button onClick={() => refuseCall()}>Refuse</button></>
+                    : null }
+                    <button onClick={(e) => {
+                        const target = e.target.parentNode;
+                        if(target) target.classList.toggle('option-column');
+                        console.log(target);
+                    }}>C.Direction</button>
+                    <button onClick={() => setOptionCall(false)} className="button-option"> Close Option </button>
                 </div>
             :
                 <button onClick={() => setOptionCall(true)} className="button-option"> Option Call </button>
