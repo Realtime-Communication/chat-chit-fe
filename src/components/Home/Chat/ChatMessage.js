@@ -50,7 +50,7 @@ export function ChatMessage() {
 
     // Get message recent with other friend now
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_API}/chats/api/GetChatWithId/${toId}`, {
+        fetch(`${process.env.REACT_APP_API}/chats/GetChatWithId/${toId}`, {
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${token}`,

@@ -99,10 +99,10 @@ function VideoCall(props) {
             });
         });
 
-        peer.once("stream", (stream) => {
+        peer.on("stream", (stream) => {
             if (userVideo.current) {
                 userVideo.current.srcObject = stream;
-                console.log("at nguoi goi");
+                console.log("Người GỌI đã nhận được tín hiệu !");
             }
         });
 
@@ -129,9 +129,9 @@ function VideoCall(props) {
             socket.emit("answerCall", { signal: data, to: caller });
         });
 
-        peer.once("stream", (stream) => {
+        peer.on("stream", (stream) => {
         if (userVideo.current) {
-            console.log("at nguoi nghe");
+            console.log("Người NGHE đã nhận được tín hiệu !");
             userVideo.current.srcObject = stream;
         }
         });

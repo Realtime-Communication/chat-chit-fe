@@ -42,7 +42,7 @@ export function ChatsRecent() {
 
     const [chatRecent, setChatRecent] = useState([]);
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_API}/chats/api/friendschats`, {
+        fetch(`${process.env.REACT_APP_API}/chats/friendschats`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
@@ -56,7 +56,7 @@ export function ChatsRecent() {
 
     //Last chats
     const fetchLastMessage = () => {
-        fetch(`${process.env.REACT_APP_API}/chats/api/getlastchats`, {
+        fetch(`${process.env.REACT_APP_API}/chats/getlastchats`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
@@ -123,7 +123,7 @@ export function ChatsRecent() {
                     return (
                         <div className='recent-item' onClick={ onclick } data-id={item._id} key={index}>
                             <div className='chat-wrap'>
-                                <div className='chat-name'>{item.userName}</div>
+                                <div className='chat-name'>{item.name}</div>
                                 {listOnline.indexOf(item._id) != -1 ? <div className={userTyping.indexOf(item._id) != -1 ? 'chat-status-online typing' :'chat-status-online'}></div> : <div className='chat-status-offline'></div>}
                             </div>
                             
