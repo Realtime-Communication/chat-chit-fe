@@ -2,23 +2,46 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    height: fit-content;
     background: rgb(168, 224, 250);
+    
     &_message {
-        width: 70%;
+        width: 75%;
         position: absolute;
         display: flex;
         flex-direction: column;
         text-align: start;
         right: 0px;
         background: rgb(171, 238, 223);
-        height: 87vh;
+        height: 93vh;
+        @media screen and (max-width: 500px) {
+            width: 100%;
+        }
     }
     &_recent {
+        text-align: center;
         overflow: hidden;
-        width: 30%;
+        width: 25%;
         position: absolute;
         left: 0px;
         background: rgb(231, 171, 171);
-        height: 87vh;
+        height: 93vh;
+        @media screen and (max-width: 500px) {
+            display: none;
+        }
+        background-image: url("https://r1.ilikewallpaper.net/iphone-12-pro-max-wallpapers/download-110834/Comets-Your-Name-Anime.jpg");
+        background-repeat: round;
+        background-position: top left;
+        background-size: contain;
+        .show_recent {
+            background: rgb(230, 70, 142);
+            color: white;
+            height: fit-content;
+            padding: 10px 20px;
+            margin-top: 15px;
+            border-radius: 10px;
+            position: fixed;
+            right: 5%;
+        }
     }
 }

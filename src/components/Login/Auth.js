@@ -1,19 +1,12 @@
 import { jwtDecode } from "jwt-decode";
-import { getCookie } from './../store/tokenContext';
+import { decodeToken, getCookie } from './../store/tokenContext';
 import React, { useContext, useEffect, useState ,createContext, useRef} from 'react';
-import { useNavigate } from 'react-router-dom';
-import Success from "../Home/alert/Success";
-import Error from "../Home/alert/Error";
+import { NavLink, useNavigate } from 'react-router-dom';
+import Success from "../Alert/Success";
 import './Auth.scss'
-const token = getCookie('access_token');
-  const info = () => {
-  try {
-      return jwtDecode(token);
-  } catch (error) {
-      return {};
-  }
-}
-const { username, sub } = info();
+import Error from "../Alert/Error";
+
+const { username, sub } = decodeToken;
 function Login() {
     const [formData, setFormData] = useState({
         username: '',
@@ -39,20 +32,20 @@ function Login() {
         })
         .then(res => res.json())
         .then(data => {
-            if(data.access_token) {
-                document.cookie = `access_token=${data.access_token}`;
-                setHasLogin(true);
-                setAlertTag(<Success value={[`Login Success`, 'You will navigate to chat page after 3s !']}/>);
-                setTimeout(() => {
-                    setAlertTag('');
-                }, 3000)
-                window.location.href = '/home';
-            } else {
-                setAlertTag(<Error value={[`Login Fail`, 'Error email or password !']}/>);
-                setTimeout(() => {
-                    setAlertTag('');
-                }, 2500)
-            }
+            data = data.data;
+            document.cookie = `access_token=${data.access_token}`;
+            setHasLogin(true);
+            setAlertTag(<Success value={[`Login Success`, 'You will navigate to chat page after 3s !']}/>);
+            setTimeout(() => {
+                setAlertTag('');
+            }, 6000)
+            window.location.href = '/home';
+        })
+        .catch(() => {
+            setAlertTag(<Error value={[`Login Fail`, 'Error email or password !']}/>);
+            setTimeout(() => {
+                setAlertTag('');
+            }, 8000)
         })
     }
     
@@ -63,32 +56,38 @@ function Login() {
 
     const handleFormSubmit = (event) => {
         event.preventDefault();
-        console.log('username:', formData.username);
-        console.log('password:', formData.password);
         submitForm();
     };
 
     return (
         <> 
-            <div>
+            <div className="login-page">
                 {alertTag}
-                {!hasLogin ?
+                { !hasLogin ?
                     <form onSubmit={handleFormSubmit} className="form-login">
-                        <label>User Email:</label>
+                        <div className="submit_center">
+                            <h2 className="title">Welcome to QuineSN</h2>
+                        </div>
+                        <label>User Email</label>
                         <input
                             type="email"
                             name="username"
                             value={formData.username}
                             onChange={handleChange}
                         />
-                        <label>Password:</label>
+                        <label>Password</label>
                         <input
                             type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
                         />
-                        <button type="submit">Submit</button>
+                        <div className="submit_center">
+                            <button type="submit">Login</button>
+                        </div>
+                        <div className="submit_center">
+                            <NavLink className={'register'}>Touch me to register new account</NavLink>
+                        </div>
                     </form>
                 :
                     <>

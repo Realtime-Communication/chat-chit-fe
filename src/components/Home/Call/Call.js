@@ -1,20 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
 import { jwtDecode } from "jwt-decode";
-import { getCookie } from "../../store/tokenContext";
+import { decodeToken } from "../../store/tokenContext";
 import { ClickContext } from "../Chat/ChatMessage";
 import Draggable, {DraggableCore} from "react-draggable";
 import './call.scss'
 import socket from "../socket";
-const token = getCookie('access_token');
-const info = () => {
-    try {
-        return jwtDecode(token);
-    } catch (error) {
-        return {};
-    }
-}
-const { username, sub } = info();
+const { username, sub, image } = decodeToken;
 function VideoCall(props) {
     
     const [stream, setStream] = useState(null);
@@ -81,7 +73,7 @@ function VideoCall(props) {
         socket.emit('sendMessage', {
             from_id: sub,
             from: username,
-            content: `____<<We are have a video call from ${username}>>____`,
+            content: `📞 We are have a video call from ${username} 📞`,
             to_id: id
         });
         const peer = new Peer({
@@ -270,6 +262,8 @@ function VideoCall(props) {
                         (!receivingCall && 
                             <><button onClick={() => callUser(props.props)} >Start Call</button>
                             <button onClick={() => {
+                                        console.log('x',props.props)
+
                                     socket.emit('give_up_call', {
                                         otherId: props.props
                                     });

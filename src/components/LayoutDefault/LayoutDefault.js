@@ -1,8 +1,11 @@
-import {Outlet} from 'react-router-dom'
+import {Outlet} from 'react-router-dom';
+import './LayoutDefault.scss'
 function LayoutDefault() {
     return (
         <>
-            <Outlet/>
+            <div className='layout_default'>
+                <Outlet/>
+            </div>
         </>
     )
 }

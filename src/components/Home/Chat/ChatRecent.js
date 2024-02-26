@@ -1,25 +1,17 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import './ChatRecent.scss';
 import { ChatContext } from './Chat';
-import { jwtDecode } from 'jwt-decode';
-import { getCookie } from '../../store/tokenContext';
 import socket from '../socket';
-const token = getCookie('access_token');
-const info = () => {
-    try {
-        return jwtDecode(token);
-    } catch (error) {
-        return {};
-    }
-}
-const { username, sub } = info();
+import { token } from '../../store/tokenContext';
+
 export function ChatsRecent() {
 
     const [listOnline, setListOnline] = useState([]);
 
-    const {isLoad, setIsLoad} = useContext(ChatContext);
+    const {isLoad, setIsLoad, isShowRecent,setIsShowRecent } = useContext(ChatContext);
 
     const [lastChatsId, setLastChatsId] = useState([]);
+
     const [lastChatsObj, setLastChatsObj] = useState([]);
 
     //users is typing with you
@@ -33,23 +25,24 @@ export function ChatsRecent() {
         if(before[0]) before[0].classList.remove("current-recent");
         target.classList.add("current-recent");
         setIsLoad(target.getAttribute('data-id'));
-        // fetch(`${process.env.REACT_APP_API}/chats/api/seen/${target.getAttribute('data-id')}`, {
-        //     headers: {
-        //         Authorization: `Bearer ${token}`,
-        //     }
-        // })
+        setIsShowRecent(false);
     }
 
     const [chatRecent, setChatRecent] = useState([]);
+
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_API}/chats/friendschats`, {
+        fetch(`${process.env.REACT_APP_API}/chats/conversations`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
         })
         .then(res => res.json())
         .then(data => {
-            setChatRecent(data);
+            const [friends, groups] = data.data;
+            const groupsId = groups.map(item => item._id);
+            console.log(groupsId);
+            socket.emit('join_groups', groupsId);
+            setChatRecent([...friends, ...groups]);
         })
         .catch(err => console.error(err));
     }, []);
@@ -63,7 +56,7 @@ export function ChatsRecent() {
         })
         .then(response => response.json())
         .then(data => {
-            const [x, y] = data;
+            const [x, y] = data.data;
             setLastChatsId(x);
             setLastChatsObj(y);
         })
@@ -86,6 +79,7 @@ export function ChatsRecent() {
     useEffect(() => {
         socket.on("loadLastMessage", (msg) => {
             fetchLastMessage();
+            console.log('csa');
         })
         fetchLastMessage();
     }, []);
@@ -100,7 +94,7 @@ export function ChatsRecent() {
     useEffect(() => {
         socket.on('typing', (data) => {
             const index = userTyping.indexOf(data.otherId);
-            if(index == -1) {
+            if(index === -1) {
                 setUserTyping([...userTyping, ...[data.otherId]]);
                 const index = userTyping.indexOf(data.otherId);
                 setTimeout(() => {
@@ -115,19 +109,20 @@ export function ChatsRecent() {
     return (
         <>
             <div className='chat-recent' ref={itemRef} >
-                <div className='recent-item current-recent' onClick={ onclick } data-id='all' key=''>
-                    <div className='chat-name' onClick={ onclick } data-id='all'>Global</div>
-                    <div className='chat-content'></div>
+                <div className='recent-item current-recent example' onClick={ onclick } data-id='all' key=''>
+                    <div className='item-wrap'></div> 
                 </div>
                 {(chatRecent || []).map((item, index) => {
                     return (
                         <div className='recent-item' onClick={ onclick } data-id={item._id} key={index}>
-                            <div className='chat-wrap'>
-                                <div className='chat-name'>{item.name}</div>
-                                {listOnline.indexOf(item._id) != -1 ? <div className={userTyping.indexOf(item._id) != -1 ? 'chat-status-online typing' :'chat-status-online'}></div> : <div className='chat-status-offline'></div>}
+                            <div className='avatar'><img src={item.image}/></div>
+                            {listOnline.indexOf(item._id) != -1 ? <div className={userTyping.indexOf(item._id) != -1 ? 'chat-status-online typing' :'chat-status-online'}></div> : <div className='chat-status-offline'></div>}
+                            <div className='item-wrap'>
+                                <div className='chat-wrap'>
+                                    <div className='chat-name'>{item.name}</div>
+                                </div>
+                                {userTyping.indexOf(item._id) != -1  ? <div className='typing'><i>This User Is Typing</i></div> : <div className='chat-content' data-id={item._id}><i>{item.content}</i></div>}
                             </div>
-                            
-                            {userTyping.indexOf(item._id) != -1  ? <div className='typing'><i>This User Is Typing</i></div> : <div className='chat-content' data-id={item._id}><i>{item.content}</i></div>}
                         </div>
                     )
                 })}

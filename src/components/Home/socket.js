@@ -1,34 +1,31 @@
 import { jwtDecode } from 'jwt-decode';
 import { io } from 'socket.io-client';
-
-const getCookie = (cookieName) => {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.startsWith(cookieName + '=')) {
-        return cookie.substring(cookieName.length + 1);
-      }
-    }
-    return '';
-}
-const token = getCookie('access_token');
+import { token } from '../store/tokenContext';
 
 const info = () => {
   try {
-      return jwtDecode(token);
+    return jwtDecode(token);
   } catch (error) {
-      return {};
+    return {};
   }
 }
+
+const socketOptions = {
+  transportOptions: {
+    polling: {
+      extraHeaders: {
+        Authorization: 'Bearer ' + token, 
+      }
+    }
+  }
+};
+
 const { username, sub } = info();
 
-const socket = io(`${process.env.REACT_APP_API}/`, {
+const socket = io(`${process.env.REACT_APP_API.substring(0, process.env.REACT_APP_API.indexOf('/api'))}/`, {
+  ...socketOptions,
   query: { myParam: sub },
-  autoConnect: true
+  autoConnect: true,
 });
-
-setInterval(() => {
-  socket.disconnect().connect();
-}, 60000);
 
 export default socket;

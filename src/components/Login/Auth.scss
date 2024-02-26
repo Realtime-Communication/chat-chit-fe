@@ -1,39 +1,77 @@
-.form-login {
-    border: 5px solid rgb(48, 203, 246);
-    padding: 80px 20px;
+.login-page {
     display: flex;
-    flex-direction: column;
-    width: 50vw;
-    height: 100%;
-    position: relative;
-    left: 25%;
-    margin-top: 10%;
-    border-radius: 20px;
-    input {
-        margin: 10px 0px;
-        border: none;
-        border-radius: 10px;
-        padding: 10px;
-    }
-    label {
-        font-size: 20px;
-        font-weight: 300;
-        color: rgb(3, 156, 3);
-    }
-    button {
-        margin-top: 20px;
-        width: 40%;
-        position: absolute;
-        bottom: 10%;
-        left: 30%;
-        border: none;
-        padding: 10px;
-        border-radius: 30px;
-        background: red;
-        color: white;
-        cursor: pointer;
-        &:hover {
-            background: rgb(201, 181, 0);
+    justify-content: space-around;
+    padding: 5%;
+    .form-login {
+        border: 5px solid rgb(48, 203, 246);
+        padding: 80px 20px;
+        display: flex;
+        flex-direction: column;
+        width: 50vw;
+        height: auto;
+        border-radius: 20px;
+        background-image: url('https://www.enwallpaper.com/wp-content/uploads/2023/08/wp7626926-scaled.jpg');
+        background-repeat: round;
+        background-position: top center;
+        background-size: contain;
+        input {
+            margin: 10px 0px;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        label {
+            font-size: 15px;
+            color: rgb(0, 0, 0);
+            background: rgb(24, 161, 240);
+            width: fit-content;
+            padding: 1px 7px;
+            border-radius: 5px;
+            color: rgb(255, 255, 255);
+            font-weight: 500;
+        }
+        .submit_center {
+            display: flex;
+            justify-content: space-around;
+            button {
+                margin-top: 20px;
+                width: 40%;
+                border: none;
+                padding: 10px;
+                border-radius: 30px;
+                background: red;
+                color: white;
+                cursor: pointer;
+                font-weight: 650;
+                &:hover {
+                    background: rgb(255, 255, 255);
+                    color: rgb(0, 0, 0);
+                    box-shadow: 1px 1px 8px 8px #646262;
+                }
+            }
+            .register {
+                margin-top: 30px;
+                text-decoration: none;
+                background: rgb(17, 147, 5);
+                color: white;
+                padding: 2px 5px;
+                border-radius: 10px;
+                &:hover {
+                    background: rgb(255, 255, 255);
+                    color: rgb(0, 0, 0);
+                }
+                text-align: center;
+            }
+            .title {
+                font-size: 35px;
+                color: rgb(255, 255, 255);
+                position: relative;
+                box-shadow: 2px 2px 8px 8px #dfc623;
+                background: rgb(226, 184, 0);
+                padding: 5px 10px;
+                border-radius: 10px;
+                text-align: center;
+            }
         }
     }
 }

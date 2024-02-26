@@ -4,30 +4,23 @@ import Posts from "./Posts";
 import Chat from "./Chat/Chat";
 import './index.scss';
 import { jwtDecode } from "jwt-decode";
-import { getCookie } from "../store/tokenContext";
+import { decodeToken, getCookie } from "../store/tokenContext";
 import { NavLink } from "react-router-dom";
-const token = getCookie('access_token');
-  const info = () => {
-  try {
-      return jwtDecode(token);
-  } catch (error) {
-      return {};
-  }
-}
-const { username, sub } = info();
+
+const { username, sub } = decodeToken;
 function Home() {
-    const [hasLogin, setHasLogin] = useState(false);
+    const [isLogin, setIsLogin] = useState(false);
     const [num, setNum] = useState(0);
     const tabsName = [<Chat/>, <Users/>, <Posts/>];
     const handleTabs = (e) => {setNum(e)};
     useEffect(() => {
-        if(username && sub) setHasLogin(true);
-        else setHasLogin(false);
+        if(username && sub) setIsLogin(true);
+        else setIsLogin(false);
     }, [])
     return (
         <>
             <div>
-                {hasLogin ? 
+                {isLogin ? 
                     <><div className="header">
                         <button className="btn" onClick={() => handleTabs(0)}>Chats</button>
                         <button className="btn" onClick={() => handleTabs(1)}>Users</button>
@@ -40,9 +33,11 @@ function Home() {
                         }>Log out</button>
                     </div><div className="content">{tabsName[num]}</div></>
                 : 
-                    <div className="login-again">
-                        <div>Maybe You Have Not Account !</div>
-                        <NavLink to='/login'>Login</NavLink>
+                    <div className="not_account">
+                        <div className="login-again">
+                            <div>Maybe You Have Not Account !</div>
+                            <NavLink className={'button-login'} to='/login'>Login</NavLink>
+                        </div>
                     </div>
                 }
             </div>

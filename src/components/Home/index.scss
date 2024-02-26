@@ -1,14 +1,33 @@
 .content {
     width: 100%;
-    height: fit-content;
+    // height: 100vh;
+    // height: fit-content;
     background: rgb(190, 230, 244);
 }
 
-.login-again {
-    margin-left: 25%;
-    font-size: 30px;
-    width: 40%;
+.not_account {
     display: flex;
-    margin-top: 20%;
-    justify-content: space-evenly;
+    justify-content: space-around;
+    align-items: center;
+    .login-again {
+        background: white;
+        padding: 2px 5px;
+        border-radius: 15px;
+        margin-top: 10%;
+        align-items: center;
+        font-size: 30px;
+        width: 40%;
+        display: flex;
+        justify-content: space-evenly;
+        .button-login {
+            text-decoration: none;
+            background: black;
+            color: white;
+            padding: 5px;
+            border-radius: 10px;
+            &:hover {
+                background: red;
+            }
+        }
+    }
 }

@@ -3,7 +3,7 @@
     flex-direction: column;
     justify-content: start;
     background: #22ad03;
-    // width: fit-content;
+    width: fit-content;
     width: 50%;
     height: fit-content;
     padding: 10px 20px;
@@ -17,15 +17,16 @@
         text-align: center;
         font-weight: 600;
         font-size: 20px;
-        padding: 10px;
+        padding: 3px;
         color: rgb(255, 255, 255);
         border-bottom: 1px solid rgb(0, 0, 0); 
-        // width: 95%;
+        border-radius: 15px;
     }
     .alert_two {
         text-align: center;
         overflow: hidden;
         font-size: 15px;
+        border-radius: 15px;
         color: rgb(255, 255, 255);
     }
 }
@@ -45,14 +46,14 @@
     .alert_one {
         text-align: center;
         font-weight: 600;
-        font-size: 35px;
+        font-size: 20px;
         color: rgb(243, 243, 242);
         border-bottom: 1px solid rgb(255, 255, 255); 
         padding: 10px;
     }
     .alert_two {
         text-align: center;
-        font-size: 25px;
+        font-size: 15px;
         color: rgb(232, 205, 213);
     }
 }
@@ -66,9 +67,9 @@
 }
 
 .left_to_right {
-    animation: moveRight 2s linear infinite;
+    animation: moveRight 8s ease-out infinite;
     @keyframes moveRight {
-        0% { left: 0%; }
-        100% { left: 50%; }
+        50% { left: 100%; }
+        100% { left: -120%; }
     }
 }

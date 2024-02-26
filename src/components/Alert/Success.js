@@ -1,10 +1,9 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import './alert.scss'
 function Success(props){
-    console.log(props, " alert")
     return (
         <>
-            <div className="alert_success">
+            <div className={"alert_success " + 'left_to_right'}>
                 <div className="alert_one">
                     {props.value[0]}
                 </div>
