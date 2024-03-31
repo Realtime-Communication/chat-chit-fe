@@ -70,7 +70,7 @@ function Register() {
                 {alertTag}
                     <form onSubmit={handleFormSubmit} className="form-login">
                         <div className="submit_center">
-                            <h2 className="title">Welcome to QuineSN</h2>
+                            <h2 className="title">mitsuha@gmail.com/mitsuha & taki@gmail.com/taki</h2>
                         </div>
                         <label>User Email*</label>
                         <input

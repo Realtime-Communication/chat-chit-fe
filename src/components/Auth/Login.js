@@ -66,7 +66,7 @@ function Login() {
                 { !hasLogin ?
                     <form onSubmit={handleFormSubmit} className="form-login">
                         <div className="submit_center">
-                            <h2 className="title">Welcome to QuineSN</h2>
+                            <h2 className="title">Welcome To Talk Together</h2>
                         </div>
                         <label>User Email</label>
                         <input
