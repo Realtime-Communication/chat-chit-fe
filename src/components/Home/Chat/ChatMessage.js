@@ -40,6 +40,21 @@ export function ChatMessage() {
     const [autoScroll, setAutoScroll] = useState(true);
     const [showLoad, setShowLoad] = useState(false);
 
+    // Box chats
+    const messagesRef = useRef({});
+
+    const [currentHeightOfChats, setCurrentHeightOfChats] = useState();
+    useEffect(() => {
+        const messages = document.querySelector("#messages");
+        messagesRef.current = messages;
+        setCurrentHeightOfChats(messagesRef.current.scrollHeight);
+    }, []);
+
+    // keep old position before fetch
+    useEffect(() => {
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight - currentHeightOfChats;
+    }, [messagesRef.current.scrollHeight])
+
     useEffect(() => {
         fetch(`${process.env.REACT_APP_API}/groups/mygroups`, {
             method: 'GET',
@@ -79,8 +94,9 @@ export function ChatMessage() {
                 setOtherImage(data.otherImage);
             }
             const messages = document.querySelector("#messages");
-            if(data.chats.length > chatsFriendRecent.length) messages.scrollTop = messages.scrollTop + messages.scrollHeight/10;
+            // if(data.chats.length > chatsFriendRecent.length) messages.scrollTop = messages.scrollTop + messages.scrollHeight/10;
             setShowLoad(false);
+            setCurrentHeightOfChats(messagesRef.current.scrollHeight);
         })
         .catch(err => console.error(err));
     }
@@ -116,6 +132,7 @@ export function ChatMessage() {
         }
     }
 
+
     // scroll top extra and get message previous
     const overScroll = (e) => {
         if(e.target.scrollTop === 0) {
@@ -123,7 +140,7 @@ export function ChatMessage() {
             setChatLimit(chatLimit + 20);
             setAutoScroll(false);
             fetchChat();
-        } else if(e.target.scrollTop + window.innerHeight <= e.target.scrollHeight){
+        } else if(e.target.scrollTop + window.innerHeight <= e.target.scrollHeight) {
             setAutoScroll(false);
         } else {
             setAutoScroll(true);
@@ -158,16 +175,15 @@ export function ChatMessage() {
     // scroll to bottom
     useEffect(() => {
         const messages = document.querySelector("#messages");
-        if(autoScroll) (messages.scrollTop = messages.scrollHeight)
-        // else 
-    }, [messageRecent])
+        if(autoScroll) messages.scrollTop = messages.scrollHeight
+    }, [messageRecent]);
 
     // check Profile
     const checkProfile = (e) => {
         console.log("checkProfile");
     };
 
-//////////////////////////////////////////////////////       << SECTION FOR CALL >>       //////////////////////////////////////////////////
+//////////////////////////////////////////////////////       << SECTION OF CALLING >>       //////////////////////////////////////////////////
 
     // The ID of otherfriend that passed in call component to call by user
     const [option, setOption] = useState();
@@ -178,13 +194,13 @@ export function ChatMessage() {
 
     //Sending call
     const goCall = (e) => {
-       if(isCall === 'none') {
+        if(isCall === 'none') {
             setCoop('You calling to '+ otherName);
             setOption(toId);
             setIsCall('flex');
-       } else {
-            window.alert('To CALL/ANSWER doubleClick on `your` screen! \nTo STOP doubleClick on `other` screen \nOr You Can Click Button On Scrren !');
-       }
+        } else {
+                window.alert('To CALL/ANSWER doubleClick on `your` screen! \nTo STOP doubleClick on `other` screen \nOr You Can Click Button On Scrren !');
+        }
     };
     // Receiver call
     useEffect(() => {
@@ -252,7 +268,9 @@ export function ChatMessage() {
                 <div class={'announ'}>
                     {showLoad ? <div className='load'>Load message previous</div> : <div></div>}
                 </div>
-                {(messageRecent || []).map((item, index) => <>{item}</> )}
+                {(messageRecent || []).map((item, index) => {
+                    return <>{item}</> 
+                })}
             </div>
             <div className='video-call' style={{display: isCall}}>
                 {resetCall ? <VideoCall props={option}/> : <></>}

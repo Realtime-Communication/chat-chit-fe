@@ -17,6 +17,7 @@ function Users(socket) {
     }, [skip]);
     const handle = (e) => {
         const dataPage = e.target.getAttribute("data-page");
+        
         setSkip((dataPage-1)*limit);
     }
     return (

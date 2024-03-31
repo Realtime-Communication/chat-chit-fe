@@ -3,7 +3,7 @@ import './alert.scss'
 function Success(props){
     return (
         <>
-            <div className={"alert_success " + 'left_to_right'}>
+            <div className={"alert_success " + 'fade_in_out'}>
                 <div className="alert_one">
                     {props.value[0]}
                 </div>

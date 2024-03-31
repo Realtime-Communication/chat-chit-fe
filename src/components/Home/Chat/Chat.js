@@ -20,10 +20,6 @@ export function Chat() {
         display: 'flex',
         width: '100%'
     };
-    const objectShowMessage = {
-        display: 'flex',
-        width: '75%'
-    };
     const objectHideChatRecent = {
         display: 'none',
     };

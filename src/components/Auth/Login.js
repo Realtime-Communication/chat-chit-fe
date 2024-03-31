@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { decodeToken, getCookie } from './../store/tokenContext';
+import { decodeToken, getCookie } from '../store/tokenContext';
 import React, { useContext, useEffect, useState ,createContext, useRef} from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import Success from "../Alert/Success";
@@ -86,7 +86,7 @@ function Login() {
                             <button type="submit">Login</button>
                         </div>
                         <div className="submit_center">
-                            <NavLink className={'register'}>Touch me to register new account</NavLink>
+                            <NavLink to="/register" className={'register'}>Touch me to register new account</NavLink>
                         </div>
                     </form>
                 :

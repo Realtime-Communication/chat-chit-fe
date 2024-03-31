@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import * as process from 'process';
 import { Routes, Route } from 'react-router-dom';
-import Login from './components/Login/Auth';
+import Login from './components/Auth/Login';
 
 (window).global = window;
 (window ).process = process;

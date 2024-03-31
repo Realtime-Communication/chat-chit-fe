@@ -32,10 +32,10 @@ function Home() {
                             }
                         }>Log out</button>
                     </div><div className="content">{tabsName[num]}</div></>
-                : 
+                :
                     <div className="not_account">
                         <div className="login-again">
-                            <div>Maybe You Have Not Account !</div>
+                            <div>Maybe You Dont Have Account !</div>
                             <NavLink className={'button-login'} to='/login'>Login</NavLink>
                         </div>
                     </div>
