@@ -88,6 +88,8 @@ function Login() {
                         <div className="submit_center">
                             <NavLink to="/register" className={'register'}>Touch me to register new account</NavLink>
                         </div>
+                        <div className="notice">The server takes a few minutes to start up for the new day
+</div>
                     </form>
                 :
                     <>

@@ -73,7 +73,7 @@ function VideoCall(props) {
         socket.emit('sendMessage', {
             from_id: sub,
             from: username,
-            content: `📞 We are have a video call from ${username} 📞`,
+            content: `📞 We have a video call from ${username} 📞`,
             to_id: id
         });
         const peer = new Peer({
