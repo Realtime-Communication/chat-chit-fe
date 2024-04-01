@@ -83,7 +83,7 @@ function Register() {
                         <input
                             type="text"
                             name="name"
-                            value={formData.email}
+                            value={formData.name}
                             onChange={handleChange}
                         />
                         <label>Password*</label>
