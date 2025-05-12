@@ -24,7 +24,7 @@ function Register() {
   const [alertTag, setAlertTag] = useState();
 
   const submitForm = () => {
-    fetch(`${process.env.REACT_APP_API}/auth/register`, {
+    fetch(`http://localhost:8080/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

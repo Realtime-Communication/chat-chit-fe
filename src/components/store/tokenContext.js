@@ -11,9 +11,9 @@ const getCookie = (cookieName) => {
   return '';
 }
 
-export const token = getCookie('access_token') || '';
+export const token = getCookie('accessToken') || '';
 
-const info = () => {
+const validate = () => {
   try {
     return jwtDecode(token);
   } catch (error) {
@@ -21,6 +21,6 @@ const info = () => {
   }
 }
 
-const { username, sub, image } = info();
+const { username, sub, image } = validate();
 const result = {username, sub, image};
 export const decodeToken = result;

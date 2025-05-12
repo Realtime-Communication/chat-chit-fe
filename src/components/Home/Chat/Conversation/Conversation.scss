@@ -1,0 +1,327 @@
+.show_recent {
+}
+.chat-recent {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overflow-y: auto;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    align-items: center;
+    
+    .friend-actions {
+        width: 90%;
+        display: flex;
+        gap: 10px;
+        margin: 10px 0;
+        justify-content: center;
+
+        button {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 120px;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        .add-friend-btn {
+            background-color: #4CAF50;
+            color: white;
+
+            &:hover {
+                background-color: #45a049;
+            }
+        }
+
+        .friend-requests-btn {
+            background-color: #2196F3;
+            color: white;
+            position: relative;
+
+            &:hover {
+                background-color: #1976D2;
+            }
+        }
+    }
+
+    .add-friend-modal {
+        width: 90%;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin: 10px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        animation: slideDown 0.3s ease-out;
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+
+            &:focus {
+                outline: none;
+                border-color: #2196F3;
+                box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+            }
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+
+            &:first-of-type {
+                background-color: #4CAF50;
+                color: white;
+
+                &:hover {
+                    background-color: #45a049;
+                }
+            }
+
+            &:last-of-type {
+                background-color: #f44336;
+                color: white;
+
+                &:hover {
+                    background-color: #d32f2f;
+                }
+            }
+        }
+    }
+
+    .friend-requests-list {
+        width: 90%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 10px 0;
+        animation: slideDown 0.3s ease-out;
+
+        .no-requests {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .friend-request-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .request-info {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+
+                .name {
+                    font-size: 16px;
+                    font-weight: 500;
+                    color: #333;
+                }
+
+                .email {
+                    font-size: 14px;
+                    color: #666;
+                }
+            }
+
+            .request-actions {
+                display: flex;
+                gap: 8px;
+
+                button {
+                    padding: 8px 16px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: all 0.3s ease;
+                    min-width: 80px;
+
+                    &:first-of-type {
+                        background-color: #4CAF50;
+                        color: white;
+
+                        &:hover {
+                            background-color: #45a049;
+                        }
+                    }
+
+                    &:last-of-type {
+                        background-color: #f44336;
+                        color: white;
+
+                        &:hover {
+                            background-color: #d32f2f;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .recent-item { 
+        &.example {
+            background-image: url("https://chuuniotaku.com/wp-content/uploads/2019/03/nhung-cau-noi-hay-trong-your-name-3.jpg");
+            background-repeat: no-repeat;
+            background-position: top left;
+            background-size: cover;
+            &.current-recent {
+                opacity: 0.5;
+            }
+        }
+        cursor: pointer;
+        padding: 5px;
+        width: 90%;
+        margin: 8px 3px;   
+        font-size: 15px;
+        border-radius: 15px;
+        background: #ddd;
+        display: flex;
+        flex-direction: row;
+        height: fit-content;
+        position: relative;
+        height: 3em;
+        .avatar {
+            width: 30%;
+            overflow: hidden;
+            overflow-x: auto;
+            border-radius: 20px;
+            img {
+                width: auto;
+                height: 100%;
+            } 
+        }
+        .chat-status-online {
+            color: rgb(12, 178, 255);
+            background: rgb(12, 178, 255);
+            border-radius: 100%;
+            height: 15px;
+            width: 15px;
+            position: absolute;
+            right: 0;
+            top: -10%;
+        }
+        .chat-status-offline {
+            position: absolute;
+            right: -1%;
+            top: -5%;
+            color: rgb(103, 104, 105);
+            background: rgb(103, 104, 105);
+            border-radius: 100%;
+            height: 15px;
+            width: 15px;
+        }
+        .typing {
+            animation: fadeInOut 5s ease-in-out infinite alternate;
+            @keyframes fadeInOut {
+                0%, 100% { opacity: 1;}
+                50% { opacity: 0; }
+            }
+            background: red;
+        }
+        .item-wrap {
+            text-align: center;
+            overflow: hidden;
+            overflow-x: auto;
+            width: 75%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            .chat-wrap {
+                display: flex;
+                justify-content: space-between;
+                .chat-name {
+                    font-size: 20px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    overflow-x: scroll;
+                    font-weight: 550;
+                    &::-webkit-scrollbar {
+                        display: none;
+                    }
+                }
+                
+            }
+            .chat-content {
+                overflow: hidden;
+                text-align: start;
+                overflow-x: auto;
+                white-space: nowrap;
+                &::-webkit-scrollbar {
+                    display: none;
+                }
+            }
+            .typing {
+                text-align: start;
+                animation: fadeInOut 5s ease-in-out infinite alternate;
+                @keyframes fadeInOut {
+                    0%, 100% { opacity: 1;}
+                    50% { opacity: 0; }
+                }
+                color: red;
+                transition: transform 0.5s ease-in-out;transform: translate3d(0, 0, 0);
+            }
+        }
+    }
+    .current-recent {
+        background: rgb(3, 158, 3);
+        color: white;
+    }
+}
+
+.chat-recent::-webkit-scrollbar {
+    width: 5px;
+}
+.chat-recent::-webkit-scrollbar-track {
+    background: #fd8b0a;
+}
+.chat-recent::-webkit-scrollbar-thumb {
+    background: #14822d;
+    border-radius: 20px;
+}
+.chat-recent::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

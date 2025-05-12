@@ -2,13 +2,13 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
 import { jwtDecode } from "jwt-decode";
 import { decodeToken } from "../../store/tokenContext";
-import { ClickContext } from "../Chat/ChatMessage";
+import { ClickContext } from "../Chat/ChatBox/ChatBox";
 import Draggable, {DraggableCore} from "react-draggable";
 import './call.scss'
-import socket from "../socket";
+import useSocket from "../../store/socket";
 const { username, sub, image } = decodeToken;
 function VideoCall(props) {
-    
+    const socket = useSocket
     const [stream, setStream] = useState(null);
     const [receivingCall, setReceivingCall] = useState(false);
     const [caller, setCaller] = useState("");
