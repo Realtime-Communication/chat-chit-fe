@@ -45,7 +45,7 @@ interface FriendRequest {
   id: number;
   requester_id: number;
   receiver_id: number;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  status: "PENDING" | "ACCEPTED" | "REJECTED";
   created_at: string;
   requester: {
     id: number;
@@ -116,7 +116,7 @@ interface CreateConversationResponse {
     id: number;
     conversation_id: number;
     user_id: number;
-    type: 'LEAD' | 'MEMBER';
+    type: "LEAD" | "MEMBER";
     created_at: string;
     updated_at: string;
     user: {
@@ -136,7 +136,7 @@ interface AddParticipantResponse {
     id: number;
     conversation_id: number;
     user_id: number;
-    type: 'LEAD' | 'MEMBER';
+    type: "LEAD" | "MEMBER";
     created_at: string;
     updated_at: string;
     user: {
@@ -166,12 +166,17 @@ interface FriendResponse {
 }
 
 export function ChatsRecent() {
-  const socket: any = useSocket;  
+  const socket: any = useSocket;
   const context = useContext(ChatContext);
 
   if (!context) return null;
 
-  const { isLoad, setIsLoad, isShowRecent, setIsShowRecent } = context;
+  const {
+    conversationIdTransfer,
+    setConversationIdTransfer,
+    isShowRecent,
+    setIsShowRecent,
+  } = context;
 
   const [chatRecent, setChatRecent] = useState<Conversation[]>([]);
   const [listOnline, setListOnline] = useState<number[]>([]);
@@ -183,21 +188,35 @@ export function ChatsRecent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showCreateConversation, setShowCreateConversation] = useState(false);
-  const [selectedFriend, setSelectedFriend] = useState<FriendRequest | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<FriendRequest | null>(
+    null
+  );
   const [conversationTitle, setConversationTitle] = useState("");
   const [showAddParticipant, setShowAddParticipant] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
   const [showFriendSelection, setShowFriendSelection] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedConversationForImage, setSelectedConversationForImage] = useState<Conversation | null>(null);
+  const [selectedConversationForImage, setSelectedConversationForImage] =
+    useState<Conversation | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const itemRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    socket.on("timerEvent", () => {
+      setIsLoading(!isLoading);
+    });
+    
+    fetchFriendRequested();
+    fetchConversations();
+    fetchFriends();
+  }, [isLoading]);
 
   const handleClick = (e: MouseEvent<HTMLDivElement>) => {
     const target = (e.target as HTMLElement).closest(
@@ -216,12 +235,12 @@ export function ChatsRecent() {
   };
 
   const changeIsLoadValue = (value: number) => {
-    setIsLoad(value);
+    setConversationIdTransfer(value);
   };
 
-  useEffect(() => {
-    console.log("sdfffffffffffffffffffffff");
-  }, [isLoad]);
+  // useEffect(() => {
+  //   console.log("sdfffffffffffffffffffffff");
+  // }, [conversationIdTransfer]);
 
   const mapApiResponseToConversation = (item: any): Conversation => {
     const lastMsg = item.lastMessage;
@@ -235,7 +254,7 @@ export function ChatsRecent() {
       const otherParticipant = item.participants.find(
         (p: any) => p.userId !== user.id
       );
-      const title = otherParticipant 
+      const title = otherParticipant
         ? `${otherParticipant.user.firstName} ${otherParticipant.user.lastName}`
         : item.title;
 
@@ -248,7 +267,7 @@ export function ChatsRecent() {
         conversationType: item.conversationType,
         participants: item.participants,
       };
-    } 
+    }
     // For group conversations, use the conversation title
     else {
       return {
@@ -287,9 +306,9 @@ export function ChatsRecent() {
     }
   };
 
-  useEffect(() => {
-    fetchConversations();
-  }, []);
+  // useEffect(() => {
+  //   fetchConversations();
+  // }, []);
 
   useEffect(() => {
     socket.on("loadLastMessage", fetchConversations);
@@ -316,41 +335,41 @@ export function ChatsRecent() {
   const handleAddFriend = async () => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API}/friends`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.statusCode === 201) {
-          alert('Friend request sent successfully!');
-          setEmail('');
+          alert("Friend request sent successfully!");
+          setEmail("");
           setShowAddFriend(false);
-          fetchFriendRequests();
+          fetchFriendRequested();
         } else {
-          alert(data.message || 'Failed to send friend request');
+          alert(data.message || "Failed to send friend request");
         }
       } else {
-        alert('Failed to send friend request');
+        alert("Failed to send friend request");
       }
     } catch (error) {
-      console.error('Error sending friend request:', error);
-      alert('Error sending friend request');
+      console.error("Error sending friend request:", error);
+      alert("Error sending friend request");
     }
   };
 
-  const fetchFriendRequests = async () => {
+  const fetchFriendRequested = async () => {
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API}/friends/requested?page=${currentPage}&size=10`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const data = await response.json();
@@ -360,7 +379,7 @@ export function ChatsRecent() {
         setTotalPages(friendData.totalPage);
       }
     } catch (error) {
-      console.error('Error fetching friend requests:', error);
+      console.error("Error fetching friend requests:", error);
     }
   };
 
@@ -370,14 +389,14 @@ export function ChatsRecent() {
         `${process.env.REACT_APP_API}/friends/accepted?page=1&size=100`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const data: FriendRequestApiResponse = await response.json();
       if (data.statusCode === 200) {
         // Extract friends from the friend requests
-        const friends: Friend[] = data.data.result.map(request => {
+        const friends: Friend[] = data.data.result.map((request) => {
           // If current user is requester, return receiver as friend
           if (request.requesterId === user.id) {
             return request.receiver;
@@ -388,33 +407,37 @@ export function ChatsRecent() {
         setFriends(friends);
       }
     } catch (error) {
-      console.error('Error fetching friends:', error);
+      console.error("Error fetching friends:", error);
     }
   };
 
   const handleCreateConversation = async () => {
     if (selectedFriends.length === 0) {
-      alert('Please select at least one friend');
+      alert("Please select at least one friend");
       return;
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API}/conversations/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: conversationTitle || 'New Conversation',
-          channelId: 2,
-          avatarUrl: "https://st.gamevui.vn/images/image/gamehanhdong/Songoku-bao-ve-size-111x111-znd.jpg",
-          participants: selectedFriends.map(friend => ({
-            userId: friend.id,
-            type: "MEMBER"
-          }))
-        })
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API}/conversations/create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title: conversationTitle || "New Conversation",
+            channelId: 2,
+            avatarUrl:
+              "https://st.gamevui.vn/images/image/gamehanhdong/Songoku-bao-ve-size-111x111-znd.jpg",
+            participants: selectedFriends.map((friend) => ({
+              userId: friend.id,
+              type: "MEMBER",
+            })),
+          }),
+        }
+      );
 
       const data = await response.json();
       if (data.statusCode === 201) {
@@ -426,24 +449,24 @@ export function ChatsRecent() {
           msgTime: conversationData.created_at,
           content: "",
           conversationType: ConversationType.GROUP,
-          participants: conversationData.participants.map(p => ({
+          participants: conversationData.participants.map((p) => ({
             id: p.id,
             userId: p.user_id,
             name: `${p.user.firstName} ${p.user.lastName}`,
-            type: p.type
-          }))
+            type: p.type,
+          })),
         };
-        setChatRecent(prev => [newConversation, ...prev]);
+        setChatRecent((prev) => [newConversation, ...prev]);
         setShowCreateConversation(false);
         setShowFriendSelection(false);
         setSelectedFriends([]);
         setConversationTitle("");
       } else {
-        alert(data.message || 'Failed to create conversation');
+        alert(data.message || "Failed to create conversation");
       }
     } catch (error) {
-      console.error('Error creating conversation:', error);
-      alert('Error creating conversation');
+      console.error("Error creating conversation:", error);
+      alert("Error creating conversation");
     }
   };
 
@@ -452,37 +475,41 @@ export function ChatsRecent() {
       const response = await fetch(
         `${process.env.REACT_APP_API}/friends/${requestId}/accept`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      
+
       const data = await response.json();
       if (data.statusCode === 201) {
-        const friendRequest = friendRequests.find(req => req.id === requestId);
+        const friendRequest = friendRequests.find(
+          (req) => req.id === requestId
+        );
         if (friendRequest) {
           setSelectedFriend(friendRequest);
           setShowCreateConversation(true);
         }
-        fetchFriendRequests();
+        fetchFriendRequested();
         fetchConversations();
       } else {
-        alert(data.message || 'Failed to handle friend request');
+        alert(data.message || "Failed to handle friend request");
       }
     } catch (error) {
-      console.error('Error handling friend request:', error);
-      alert('Error handling friend request');
+      console.error("Error handling friend request:", error);
+      alert("Error handling friend request");
     }
   };
 
   useEffect(() => {
-    fetchFriendRequests();
+    fetchFriendRequested();
   }, [currentPage]);
 
-  const pendingRequests = friendRequests.filter(req => req.status === 'PENDING');
+  const pendingRequests = friendRequests.filter(
+    (req) => req.status === "PENDING"
+  );
 
   const handleConversationClick = (conversation: Conversation) => {
     // setSelectedConversation(conversation);
@@ -494,10 +521,10 @@ export function ChatsRecent() {
   };
 
   const toggleFriendSelection = (friend: Friend) => {
-    setSelectedFriends(prev => {
-      const isSelected = prev.some(f => f.id === friend.id);
+    setSelectedFriends((prev) => {
+      const isSelected = prev.some((f) => f.id === friend.id);
       if (isSelected) {
-        return prev.filter(f => f.id !== friend.id);
+        return prev.filter((f) => f.id !== friend.id);
       } else {
         return [...prev, friend];
       }
@@ -529,7 +556,7 @@ export function ChatsRecent() {
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         setUploadError("Please drop an image file");
         return;
       }
@@ -547,30 +574,35 @@ export function ChatsRecent() {
   const handleImageUpload = async (file: File) => {
     try {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append("image", file);
 
-      const response = await fetch(`${process.env.REACT_APP_API}/conversations/${selectedConversationForImage?.id}/avatar`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API}/conversations/${selectedConversationForImage?.id}/avatar`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       const data = await response.json();
       if (data.statusCode === 200) {
         setImageUrl(data.data.avatarUrl);
         // Update the conversation in the list
-        setChatRecent(prev => prev.map(conv => 
-          conv.id === selectedConversationForImage?.id 
-            ? { ...conv, image: data.data.avatarUrl }
-            : conv
-        ));
+        setChatRecent((prev) =>
+          prev.map((conv) =>
+            conv.id === selectedConversationForImage?.id
+              ? { ...conv, image: data.data.avatarUrl }
+              : conv
+          )
+        );
       } else {
         setUploadError(data.message || "Failed to upload image");
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error("Error uploading image:", error);
       setUploadError("Failed to upload image");
     }
   };
@@ -582,29 +614,34 @@ export function ChatsRecent() {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API}/conversations/${selectedConversationForImage?.id}/avatar`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ avatarUrl: imageUrl })
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API}/conversations/${selectedConversationForImage?.id}/avatar`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ avatarUrl: imageUrl }),
+        }
+      );
 
       const data = await response.json();
       if (data.statusCode === 200) {
         // Update the conversation in the list
-        setChatRecent(prev => prev.map(conv => 
-          conv.id === selectedConversationForImage?.id 
-            ? { ...conv, image: imageUrl }
-            : conv
-        ));
+        setChatRecent((prev) =>
+          prev.map((conv) =>
+            conv.id === selectedConversationForImage?.id
+              ? { ...conv, image: imageUrl }
+              : conv
+          )
+        );
         setShowImageModal(false);
       } else {
         setUploadError(data.message || "Failed to update image URL");
       }
     } catch (error) {
-      console.error('Error updating image URL:', error);
+      console.error("Error updating image URL:", error);
       setUploadError("Failed to update image URL");
     }
   };
@@ -613,23 +650,24 @@ export function ChatsRecent() {
     <>
       <div className="chat-recent" ref={itemRef}>
         <div className="friend-actions">
-          <button 
+          <button
             className="add-friend-btn"
             onClick={() => setShowAddFriend(!showAddFriend)}
           >
             Add Friend
           </button>
-          <button 
+          <button
             className="create-conversation-btn"
             onClick={() => setShowCreateConversation(!showCreateConversation)}
           >
             Create Conversation
           </button>
-          <button 
+          <button
             className="friend-requests-btn"
             onClick={() => setShowFriendRequests(!showFriendRequests)}
           >
-            Friend Requests {pendingRequests.length > 0 && `(${pendingRequests.length})`}
+            Friend Requests{" "}
+            {pendingRequests.length > 0 && `(${pendingRequests.length})`}
           </button>
         </div>
 
@@ -656,7 +694,7 @@ export function ChatsRecent() {
               onChange={(e) => setConversationTitle(e.target.value)}
             />
             {!showFriendSelection ? (
-              <button 
+              <button
                 className="select-friends-btn"
                 onClick={() => {
                   setShowFriendSelection(true);
@@ -669,20 +707,26 @@ export function ChatsRecent() {
               <div className="friends-selection">
                 <h4>Select Friends</h4>
                 <div className="friends-list">
-                  {friends.map(friend => (
-                    <div 
-                      key={friend.id} 
-                      className={`friend-item ${selectedFriends.some(f => f.id === friend.id) ? 'selected' : ''}`}
+                  {friends.map((friend) => (
+                    <div
+                      key={friend.id}
+                      className={`friend-item ${
+                        selectedFriends.some((f) => f.id === friend.id)
+                          ? "selected"
+                          : ""
+                      }`}
                       onClick={() => toggleFriendSelection(friend)}
                     >
-                      <span className="name">{friend.firstName} {friend.lastName}</span>
+                      <span className="name">
+                        {friend.firstName} {friend.lastName}
+                      </span>
                       <span className="email">{friend.email}</span>
                     </div>
                   ))}
                 </div>
                 <div className="selected-friends">
                   <h4>Selected Friends ({selectedFriends.length})</h4>
-                  {selectedFriends.map(friend => (
+                  {selectedFriends.map((friend) => (
                     <div key={friend.id} className="selected-friend">
                       {friend.firstName} {friend.lastName}
                     </div>
@@ -692,12 +736,14 @@ export function ChatsRecent() {
             )}
             <div className="modal-actions">
               <button onClick={handleCreateConversation}>Create</button>
-              <button onClick={() => {
-                setShowCreateConversation(false);
-                setShowFriendSelection(false);
-                setSelectedFriends([]);
-                setConversationTitle("");
-              }}>
+              <button
+                onClick={() => {
+                  setShowCreateConversation(false);
+                  setShowFriendSelection(false);
+                  setSelectedFriends([]);
+                  setConversationTitle("");
+                }}
+              >
                 Cancel
               </button>
             </div>
@@ -726,8 +772,14 @@ export function ChatsRecent() {
                   <span className="email">{request.requester.email}</span>
                 </div>
                 <div className="request-actions">
-                  <button onClick={() => handleFriendRequest(request.id, true)}>Accept</button>
-                  <button onClick={() => handleFriendRequest(request.id, false)}>Decline</button>
+                  <button onClick={() => handleFriendRequest(request.id, true)}>
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleFriendRequest(request.id, false)}
+                  >
+                    Decline
+                  </button>
                 </div>
               </div>
             ))}
@@ -741,10 +793,10 @@ export function ChatsRecent() {
           <div className="image-modal">
             <div className="modal-content">
               <h3>Change Conversation Image</h3>
-              
+
               <div className="image-upload-section">
-                <div 
-                  className={`drop-zone ${isDragging ? 'dragging' : ''}`}
+                <div
+                  className={`drop-zone ${isDragging ? "dragging" : ""}`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
@@ -755,13 +807,13 @@ export function ChatsRecent() {
                     ref={fileInputRef}
                     onChange={handleFileInput}
                     accept="image/*"
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                   />
                   <p>Drag and drop an image here or click to select</p>
                   {selectedConversationForImage.image && (
-                    <img 
-                      src={selectedConversationForImage.image} 
-                      alt="Current conversation" 
+                    <img
+                      src={selectedConversationForImage.image}
+                      alt="Current conversation"
                       className="preview-image"
                     />
                   )}
@@ -782,12 +834,16 @@ export function ChatsRecent() {
               </div>
 
               <div className="modal-actions">
-                <button onClick={() => {
-                  setShowImageModal(false);
-                  setSelectedConversationForImage(null);
-                  setImageUrl("");
-                  setUploadError("");
-                }}>Close</button>
+                <button
+                  onClick={() => {
+                    setShowImageModal(false);
+                    setSelectedConversationForImage(null);
+                    setImageUrl("");
+                    setUploadError("");
+                  }}
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
@@ -809,10 +865,7 @@ export function ChatsRecent() {
             data-id={item.id}
             key={item.id}
           >
-            <div 
-              className="avatar" 
-              onClick={(e) => handleImageClick(item, e)}
-            >
+            <div className="avatar" onClick={(e) => handleImageClick(item, e)}>
               <img src={item.image || "/default-avatar.png"} alt="avatar" />
             </div>
             {listOnline.includes(item.id) ? (
@@ -841,105 +894,6 @@ export function ChatsRecent() {
           </div>
         ))}
       </div>
-
-      <style jsx>{`
-        .image-modal {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 1000;
-        }
-
-        .modal-content {
-          background: white;
-          padding: 20px;
-          border-radius: 8px;
-          width: 90%;
-          max-width: 500px;
-        }
-
-        .drop-zone {
-          border: 2px dashed #ccc;
-          border-radius: 4px;
-          padding: 20px;
-          text-align: center;
-          cursor: pointer;
-          margin-bottom: 20px;
-          transition: border-color 0.3s ease;
-        }
-
-        .drop-zone.dragging {
-          border-color: #007bff;
-          background: rgba(0, 123, 255, 0.1);
-        }
-
-        .preview-image {
-          max-width: 200px;
-          max-height: 200px;
-          margin-top: 10px;
-          border-radius: 4px;
-        }
-
-        .url-input-section {
-          margin-top: 20px;
-        }
-
-        .url-input-section input {
-          width: 100%;
-          padding: 8px;
-          margin: 10px 0;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-        }
-
-        .error-message {
-          color: red;
-          margin-top: 10px;
-        }
-
-        .modal-actions {
-          margin-top: 20px;
-          text-align: right;
-        }
-
-        .modal-actions button {
-          padding: 8px 16px;
-          margin-left: 10px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-        }
-
-        .modal-actions button:first-child {
-          background: #6c757d;
-          color: white;
-        }
-
-        .avatar {
-          cursor: pointer;
-          position: relative;
-        }
-
-        .avatar:hover::after {
-          content: "Change image";
-          position: absolute;
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          background: rgba(0, 0, 0, 0.8);
-          color: white;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          white-space: nowrap;
-        }
-      `}</style>
     </>
   );
 }

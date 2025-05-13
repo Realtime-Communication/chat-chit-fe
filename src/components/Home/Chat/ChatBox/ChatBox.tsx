@@ -19,9 +19,9 @@ import useSocket from "../../../store/socket";
 export enum MessageType {
   text = "TEXT",
   image = "IMAGE",
-  file="FILE",
-  video="VIDEO",
-  call="CALL",
+  file = "FILE",
+  video = "VIDEO",
+  call = "CALL",
 }
 
 export enum CallStatus {
@@ -160,7 +160,7 @@ interface OtherInfo {
 // Function to get other info from conversation
 const getOtherInfo = (
   conversation: ConversationVm | undefined,
-  currentUserId: string
+  currentUserId: number
 ): OtherInfo => {
   if (!conversation) {
     return {
@@ -181,15 +181,24 @@ const getOtherInfo = (
 
   // For friend conversation, find the other participant
   const otherParticipant = conversation.participants?.find(
-    (p) => p.userId.toString() !== currentUserId
+    (p) => p.userId !== currentUserId
   );
 
+  if (conversation.participants && conversation.participants?.length <= 2) {
+    return {
+      name: otherParticipant
+        ? `Friend: ${otherParticipant.user.firstName} ${otherParticipant.user.lastName}`
+        : "Unknown",
+      image: otherParticipant?.user.avatarUrl || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRI9lRck6miglY0SZF_BZ_sK829yiNskgYRUg&s',
+      type: ConversationType.FRIEND,
+      participants: conversation.participants,
+    };
+  }
+
   return {
-    name: otherParticipant
-      ? `${otherParticipant.user.firstName} ${otherParticipant.user.lastName}`
-      : "Unknown",
-    image: otherParticipant?.user.avatarUrl || "",
-    type: ConversationType.FRIEND,
+    name: "Group: " + conversation.title,
+    image: otherParticipant?.user.avatarUrl || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg2EeQe-qNJinTWuKmUVZwpQnXkt6DudNoBQ&s",
+    type: ConversationType.GROUP,
     participants: conversation.participants,
   };
 };
@@ -201,7 +210,7 @@ export function ChatBox() {
   const context = useContext(ChatContext);
   if (!context) return null;
 
-  const { isLoad, setIsLoad, isShowRecent, setIsShowRecent } = context;
+  const { conversationIdTransfer, setConversationIdTransfer, isShowRecent, setIsShowRecent } = context;
 
   const [otherInfo, setOtherInfo] = useState<OtherInfo>({
     name: "All",
@@ -231,15 +240,15 @@ export function ChatBox() {
 
   // Update conversation when isLoad changes
   useEffect(() => {
-    if (isLoad) {
-      setConversationId(isLoad);
+    if (conversationIdTransfer) {
+      setConversationId(conversationIdTransfer);
       setAutoScroll(true);
       setChatLimit(15);
       if (inputRef.current) {
         inputRef.current.focus();
       }
     }
-  }, [isLoad]);
+  }, [conversationIdTransfer]);
 
   // Fetch conversation info
   useEffect(() => {
@@ -251,8 +260,8 @@ export function ChatBox() {
         },
       })
         .then((res) => res.json())
-        .then((data: ConversationVm) => {
-          setConversationInfo(data);
+        .then((data) => {
+          setConversationInfo(data.data);
         })
         .catch((err) => console.error(err));
     }
@@ -261,7 +270,7 @@ export function ChatBox() {
   // Update other info when conversation changes
   useEffect(() => {
     if (conversationInfo) {
-      setOtherInfo(getOtherInfo(conversationInfo, user.id.toString()));
+      setOtherInfo(getOtherInfo(conversationInfo, user.id));
     }
   }, [conversationInfo]);
 
@@ -390,9 +399,7 @@ export function ChatBox() {
   const handleComingMessage = (msg: any) => {
     const tmp = user;
     console.log("xxxxxxxxxxxx " + tmp);
-    if (
-      msg.conversationId == conversationId
-    ) {
+    if (msg.conversationId == conversationId) {
       console.log("HERE 1");
       setMessageRecent((prev) => [
         ...prev,
@@ -531,7 +538,7 @@ export function ChatBox() {
 
   return (
     <>
-      <div>Channel ID = {isLoad}</div>
+      <div>Channel ID = {conversationIdTransfer}</div>
 
       {alertTag}
       <div className="header-bar">
@@ -542,7 +549,7 @@ export function ChatBox() {
           X
         </div>
         <div className="profile">
-          <img className="avatar" src={otherInfo.image} />
+          <img className="avatar" src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s' />
           <div className="user-profile" onClick={checkProfile}>
             <b>{otherInfo ? otherInfo.name : "All"}</b>
           </div>
@@ -563,7 +570,7 @@ export function ChatBox() {
             {" "}
             Watashi <b>{user.lastName}</b>
           </div>
-          <img className="avatar" src={user.avatarUrl} />
+          <img className="avatar" src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqTVkhCTegQ52T8whAahZj7gNfvJOywWFlOg&s' />
         </div>
       </div>
       <div className="view-profile"></div>

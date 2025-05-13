@@ -6,22 +6,22 @@ import { ChatBox } from "./ChatBox/ChatBox";
 
 // Define the shape of the context
 export interface ChatContextType {
-  isLoad: number;
-  setIsLoad: React.Dispatch<React.SetStateAction<number>>;
+  conversationIdTransfer: number;
+  setConversationIdTransfer: React.Dispatch<React.SetStateAction<number>>;
   isShowRecent: boolean;
   setIsShowRecent: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // Create the context with default values
 export let ChatContext = createContext<ChatContextType>({
-  isLoad: -1,
-  setIsLoad: () => {}, // no-op function
+  conversationIdTransfer: -1,
+  setConversationIdTransfer: () => {}, // no-op function
   isShowRecent: true,
   setIsShowRecent: () => {}, // no-op function
 });
 
 export function Chat() {
-  const [isLoad, setIsLoad] = useState<number>(-1);
+  const [conversationIdTransfer, setConversationIdTransfer] = useState<number>(-1);
   const [isShowRecent, setIsShowRecent] = useState<boolean>(true);
 
   ChatContext;
@@ -40,7 +40,7 @@ export function Chat() {
   return (
     <>
       <ChatContext.Provider
-        value={{ isLoad, setIsLoad, isShowRecent, setIsShowRecent }}
+        value={{ conversationIdTransfer, setConversationIdTransfer, isShowRecent, setIsShowRecent }}
       >
         <div className="chat">
           <div
