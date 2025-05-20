@@ -15,23 +15,14 @@ import {
 import socketService from "../../../socket/Socket";
 import user from "../../store/accountContext";
 import { useCall } from "../../../hook/CallContext";
+
 interface SignalData {
   signal: any;
 }
 
-interface CallParticipant {
-  // participantId: number; // Changed to number to match userId
-  // participantInfo: User;
-  userVideo: HTMLVideoElement | undefined;
-  peer: Peer.Instance | null;
-  signal: string | null; // Added signal property
-}
-
 function VideoCall() {
   const { conversation, setConversation } = useCall();
-  const [myConversationState, setMyConversationState] = useState<
-    CallDto | undefined
-  >(undefined);
+  const [myConversationState, setMyConversationState] = useState<CallDto | undefined>(undefined);
   const [stream, setStream] = useState<MediaStream | undefined>(undefined);
   const [receivingCall, setReceivingCall] = useState(false);
   const [caller, setCaller] = useState<User | undefined>(undefined);
@@ -39,12 +30,13 @@ function VideoCall() {
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
 
+  const userVideo = useRef<HTMLVideoElement>(null);
+  const connectionRef = useRef<Peer.Instance | null>(null);
   const myVideo = useRef<HTMLVideoElement>(null);
-  const userVideos = useRef<CallParticipant[]>([]);
 
   const [isCaller, setIsCaller] = useState(true);
-  const [direction, setDirection] = useState(false);
   const [optionCall, setOptionCall] = useState(false);
+  const [direction, setDirection] = useState(false);
 
   useEffect(() => {
     navigator.mediaDevices
@@ -74,13 +66,13 @@ function VideoCall() {
     setCallEnded(false);
     setIsCaller(true);
 
-    userVideos.current = [];
-    // connectionRef.current = null;
+    userVideo.current = null;
+    connectionRef.current = null;
 
     setMyConversationState({
       conversationId: conversation?.id,
       conversationType: conversation?.type,
-      content: `📞 We have a video call from ${"name"} 📞 at ${new Date().toLocaleString(
+      content: `📞 We have a video call from ${'name'} 📞 at ${new Date().toLocaleString(
         "en-US",
         {
           year: "numeric",
@@ -106,16 +98,10 @@ function VideoCall() {
     socketService.emit("sendMessage", myConversationState);
 
     const peer = new Peer({
+      initiator: true,
       trickle: false,
       stream: stream,
-      initiator: true,
     });
-
-    const callParticipant: CallParticipant = {
-      userVideo: undefined,
-      peer: null,
-      signal: null,
-    };
 
     peer.once("signal", (data: SignalData) => {
       console.log("call user 2");
@@ -123,11 +109,10 @@ function VideoCall() {
     });
 
     peer.on("stream", (stream: MediaStream) => {
-      const videoElement = document.createElement("video");
-      videoElement.srcObject = stream;
-
-      callParticipant.userVideo = videoElement;
-      userVideos.current.push(callParticipant);
+      if (userVideo.current) {
+        userVideo.current.srcObject = stream;
+        console.log("Caller received signal!");
+      }
     });
 
     socketService.listen("callAccepted", (call: CallResponseDto) => {
@@ -136,25 +121,18 @@ function VideoCall() {
       peer.signal(call.signal);
     });
 
-    callParticipant.peer = peer;
+    connectionRef.current = peer;
   };
 
   const answerCall = () => {
     setIsCaller(false);
     console.log("click accept");
     setCallAccepted(true);
-
     const peer = new Peer({
+      initiator: false,
       trickle: false,
       stream: stream,
-      initiator: false,
     });
-
-    const callParticipant: CallParticipant = {
-      userVideo: undefined,
-      peer: null,
-      signal: null,
-    };
 
     peer.once("signal", (data: string) => {
       socketService.emit("answerCall", {
@@ -164,15 +142,14 @@ function VideoCall() {
     });
 
     peer.on("stream", (stream: MediaStream) => {
-      const videoElement = document.createElement("video");
-      videoElement.srcObject = stream;
-      callParticipant.userVideo = videoElement;
-      userVideos.current.push(callParticipant);
-      console.log("Receiver received signal!");
+      if (userVideo.current) {
+        console.log("Receiver received signal!");
+        userVideo.current.srcObject = stream;
+      }
     });
 
     peer.signal(callerSignal);
-    callParticipant.peer = peer;
+    connectionRef.current = peer;
   };
 
   const refuseCall = () => {
@@ -181,20 +158,18 @@ function VideoCall() {
 
   const leaveCall = () => {
     setCallEnded(true);
-    userVideos.current.forEach((userVideo) => {
-      if (userVideo.peer) {
-        try {
-          console.log("prepare removeStream");
-          userVideo.peer.removeStream(stream!);
-          if (userVideo.peer.writable) {
-            userVideo.peer.send("something");
-            console.log("has write something");
-          }
-        } catch (error) {
-          console.log(error);
+    if (connectionRef.current) {
+      try {
+        console.log("prepare removeStream");
+        connectionRef.current.removeStream(stream!);
+        if (connectionRef.current.writable) {
+          connectionRef.current.send("something");
+          console.log("has write something");
         }
+      } catch (error) {
+        console.log(error);
       }
-    });
+    }
     socketService.emit("completeCloseCall", myConversationState);
   };
 
@@ -220,7 +195,7 @@ function VideoCall() {
               !receivingCall && (
                 <div>
                   <button className="start-call" onClick={callUser}>
-                    {userVideos.current[0] ? "Calling..." : "Start Call"}
+                    {connectionRef.current ? "Calling..." : "Start Call"}
                   </button>
                   <button
                     className="give-up-call"
@@ -237,7 +212,7 @@ function VideoCall() {
 
           {receivingCall && !callAccepted ? (
             <div className="button-call">
-              <h1 className="call-from">{"name"} Calling . . .</h1>
+              <h1 className="call-from">{'name'} Calling . . .</h1>
               <button className="call-ac" onClick={answerCall}>
                 Answer
               </button>
@@ -248,7 +223,7 @@ function VideoCall() {
           ) : null}
 
           <div className={direction ? "video-flex-column" : "video-flex-row"}>
-            <div className="my-video">
+            <div className="video--">
               {stream && (
                 <video
                   className="rounded-full"
@@ -269,28 +244,16 @@ function VideoCall() {
             </div>
 
             <div className="user-video">
-              {callAccepted && !callEnded
-                ? userVideos.current.map((userVideo, index) => {
-                    return (
-                      <video
-                        className="rounded-full"
-                        playsInline
-                        ref={(el) => {
-                          if (
-                            el &&
-                            userVideo &&
-                            userVideo.userVideo?.srcObject
-                          ) {
-                            el.srcObject = userVideo.userVideo.srcObject;
-                          }
-                        }}
-                        onDoubleClick={leaveCall}
-                        autoPlay
-                        style={{ width: "300px" }}
-                      />
-                    );
-                  })
-                : null}
+              {callAccepted && !callEnded ? (
+                <video
+                  className="rounded-full"
+                  playsInline
+                  ref={userVideo}
+                  onDoubleClick={leaveCall}
+                  autoPlay
+                  style={{ width: "300px" }}
+                />
+              ) : null}
             </div>
           </div>
         </div>
