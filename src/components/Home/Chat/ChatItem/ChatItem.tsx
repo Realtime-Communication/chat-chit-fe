@@ -1,18 +1,17 @@
 import { jwtDecode } from "jwt-decode";
 import React, { useEffect, useRef, useState } from "react";
-import { token } from "../../../store/tokenContext";
+import { token } from "../../../store/TokenContext";
 import user from "../../../store/accountContext";
 import { MessageDto } from "../ChatBox/ChatBox";
-import useSocket from "../../../store/socket";
+import socketService from "../../../../socket/Socket";
 
 const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "svg"];
 
 interface InsertMessageProps {
-  props: [MessageDto, number];
+  props: [MessageDto, number | undefined];
 }
 
 export function InsertMessage({ props }: InsertMessageProps) {
-  const socket: any = useSocket;
   const [msg, conversationId] = props;
 
   const [showOption, setShowOption] = useState<boolean>(false);
@@ -32,7 +31,7 @@ export function InsertMessage({ props }: InsertMessageProps) {
           Authorization: `Bearer ${token}`,
         },
       }).then(() => {
-        socket.emit("delete_message", { otherId: conversationId });
+        socketService.emit("delete_message", { otherId: conversationId });
         if (contentRef.current) {
           contentRef.current.innerHTML = "<b>Message has been delete</b>";
         }

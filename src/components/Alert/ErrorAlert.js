@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import "./alert.scss";
 
-function Error(props) {
+function ErrorAlert(props) {
   return (
     <>
       <div className={"alert_error " + "left_to_right"}>
@@ -12,4 +12,4 @@ function Error(props) {
   );
 }
 
-export default Error;
+export default ErrorAlert;

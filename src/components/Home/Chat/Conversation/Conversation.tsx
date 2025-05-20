@@ -7,11 +7,11 @@ import React, {
   DragEvent,
 } from "react";
 import "./Conversation.scss";
-import { ChatContext } from "../ChatPage";
-import { token } from "../../../store/tokenContext";
-import useSocket from "../../../store/socket";
+import { token } from "../../../store/TokenContext";
 import AddParticipant from "./AddParticipant";
 import user from "../../../store/accountContext";
+import socketService from "../../../../socket/Socket";
+import { useConversation } from "../../../../hook/ConversationContext";
 
 export enum ConversationType {
   GROUP = 0,
@@ -165,20 +165,14 @@ interface FriendResponse {
   result: Friend[];
 }
 
-export function ChatsRecent() {
-  const socket: any = useSocket;
-  const context = useContext(ChatContext);
+export function Conversation() {
+  
+  const { conversationId, setConversationId, isShowRecent, setIsShowRecent } =
+    useConversation();
 
-  if (!context) return null;
-
-  const {
-    conversationIdTransfer,
-    setConversationIdTransfer,
-    isShowRecent,
-    setIsShowRecent,
-  } = context;
-
-  const [chatRecent, setChatRecent] = useState<Conversation[]>([]);
+  const [conversationRecent, setConversationRecent] = useState<Conversation[]>(
+    []
+  );
   const [listOnline, setListOnline] = useState<number[]>([]);
   const [userTyping, setUserTyping] = useState<number[]>([]);
   const [showAddFriend, setShowAddFriend] = useState(false);
@@ -209,10 +203,9 @@ export function ChatsRecent() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    socket.on("timerEvent", () => {
+    socketService.listen("timerEvent", () => {
       setIsLoading(!isLoading);
     });
-    
     fetchFriendRequested();
     fetchConversations();
     fetchFriends();
@@ -235,12 +228,8 @@ export function ChatsRecent() {
   };
 
   const changeIsLoadValue = (value: number) => {
-    setConversationIdTransfer(value);
+    setConversationId(value);
   };
-
-  // useEffect(() => {
-  //   console.log("sdfffffffffffffffffffffff");
-  // }, [conversationIdTransfer]);
 
   const mapApiResponseToConversation = (item: any): Conversation => {
     const lastMsg = item.lastMessage;
@@ -300,29 +289,27 @@ export function ChatsRecent() {
             new Date(b.msgTime).getTime() - new Date(a.msgTime).getTime()
         );
       console.log(formatted);
-      setChatRecent(formatted);
+      setConversationId(formatted.at(0)?.id);
+      setConversationRecent(formatted);
     } catch (err) {
       console.error("Failed to fetch conversations:", err);
     }
   };
 
-  // useEffect(() => {
-  //   fetchConversations();
-  // }, []);
+  useEffect(() => {
+    socketService.listen("loadLastMessage", fetchConversations);
+    return () =>
+      socketService.offListener("loadLastMessage", fetchConversations);
+  }, []);
 
   useEffect(() => {
-    socket.on("loadLastMessage", fetchConversations);
-    return () => socket.off("loadLastMessage", fetchConversations);
-  }, [socket]);
-
-  useEffect(() => {
-    socket.on("listOnline", (data: { listOnline: number[] }) => {
+    socketService.listen("listOnline", (data: { listOnline: number[] }) => {
       setListOnline(data.listOnline);
     });
-  }, [socket]);
+  }, []);
 
   useEffect(() => {
-    socket.on("typing", (data: { otherId: number }) => {
+    socketService.listen("typing", (data: { otherId: number }) => {
       if (!userTyping.includes(data.otherId)) {
         setUserTyping((prev) => [...prev, data.otherId]);
         setTimeout(() => {
@@ -330,7 +317,7 @@ export function ChatsRecent() {
         }, 3000);
       }
     });
-  }, [socket, userTyping]);
+  }, [userTyping]);
 
   const handleAddFriend = async () => {
     try {
@@ -456,7 +443,7 @@ export function ChatsRecent() {
             type: p.type,
           })),
         };
-        setChatRecent((prev) => [newConversation, ...prev]);
+        setConversationRecent((prev) => [newConversation, ...prev]);
         setShowCreateConversation(false);
         setShowFriendSelection(false);
         setSelectedFriends([]);
@@ -591,7 +578,7 @@ export function ChatsRecent() {
       if (data.statusCode === 200) {
         setImageUrl(data.data.avatarUrl);
         // Update the conversation in the list
-        setChatRecent((prev) =>
+        setConversationRecent((prev) =>
           prev.map((conv) =>
             conv.id === selectedConversationForImage?.id
               ? { ...conv, image: data.data.avatarUrl }
@@ -629,7 +616,7 @@ export function ChatsRecent() {
       const data = await response.json();
       if (data.statusCode === 200) {
         // Update the conversation in the list
-        setChatRecent((prev) =>
+        setConversationRecent((prev) =>
           prev.map((conv) =>
             conv.id === selectedConversationForImage?.id
               ? { ...conv, image: imageUrl }
@@ -849,16 +836,16 @@ export function ChatsRecent() {
           </div>
         )}
 
-        <div
+        {/* <div
           className="recent-item current-recent example"
           onClick={handleClick}
-          data-id="all"
-          key="all"
+          data-id="-1"
+          key="-1"
         >
           <div className="item-wrap" />
-        </div>
+        </div> */}
 
-        {chatRecent.map((item) => (
+        {conversationRecent.map((item) => (
           <div
             className="recent-item"
             onClick={handleClick}
@@ -898,4 +885,4 @@ export function ChatsRecent() {
   );
 }
 
-export default ChatsRecent;
+export default Conversation;

@@ -1,30 +1,33 @@
 import React, { Context, createContext, useEffect, useState } from "react";
-import { ChatsRecent } from "./Conversation/Conversation";
+import { Conversation } from "./Conversation/Conversation";
 import "./ChatPage.scss";
-import StateContextProvider from "../../store/stateContext";
 import { ChatBox } from "./ChatBox/ChatBox";
+import {
+  ConversationProvider,
+  useConversation,
+} from "../../../hook/ConversationContext";
+import { CallProvider } from "../../../hook/CallContext";
 
-// Define the shape of the context
-export interface ChatContextType {
-  conversationIdTransfer: number;
-  setConversationIdTransfer: React.Dispatch<React.SetStateAction<number>>;
-  isShowRecent: boolean;
-  setIsShowRecent: React.Dispatch<React.SetStateAction<boolean>>;
-}
+// // Define the shape of the context
+// export interface ChatContextType {
+//   conversationIdTransfer: number;
+//   setConversationIdTransfer: React.Dispatch<React.SetStateAction<number>>;
+//   isShowRecent: boolean;
+//   setIsShowRecent: React.Dispatch<React.SetStateAction<boolean>>;
+// }
 
-// Create the context with default values
-export let ChatContext = createContext<ChatContextType>({
-  conversationIdTransfer: -1,
-  setConversationIdTransfer: () => {}, // no-op function
-  isShowRecent: true,
-  setIsShowRecent: () => {}, // no-op function
-});
+// // Create the context with default values
+// export let ChatContext = createContext<ChatContextType>({
+//   conversationIdTransfer: -1,
+//   setConversationIdTransfer: () => {}, // no-op function
+//   isShowRecent: true,
+//   setIsShowRecent: () => {}, // no-op function
+// });
 
 export function Chat() {
-  const [conversationIdTransfer, setConversationIdTransfer] = useState<number>(-1);
-  const [isShowRecent, setIsShowRecent] = useState<boolean>(true);
+  const { conversationId, setConversationId, isShowRecent, setIsShowRecent } =
+    useConversation();
 
-  ChatContext;
   const objectShowChatRecent: React.CSSProperties = {
     display: "flex",
     width: "100%",
@@ -39,9 +42,7 @@ export function Chat() {
 
   return (
     <>
-      <ChatContext.Provider
-        value={{ conversationIdTransfer, setConversationIdTransfer, isShowRecent, setIsShowRecent }}
-      >
+      {
         <div className="chat">
           <div
             className="chat_recent"
@@ -53,12 +54,15 @@ export function Chat() {
                 : {}
             }
           >
-            <ChatsRecent />
-            {/* {isShowRecent && (
-            <div className="show_recent" onClick={() => setIsShowRecent(!isShowRecent)}>
-              X
-            </div>
-          )} */}
+            <Conversation />
+            {isShowRecent && (
+              <div
+                className="show_recent"
+                onClick={() => setIsShowRecent(!isShowRecent)}
+              >
+                X
+              </div>
+            )}
           </div>
           <div
             className="chat_message"
@@ -70,10 +74,12 @@ export function Chat() {
                 : {}
             }
           >
-            <ChatBox />
+            <CallProvider>
+              <ChatBox />
+            </CallProvider>
           </div>
         </div>
-      </ChatContext.Provider>
+      }
     </>
   );
 }

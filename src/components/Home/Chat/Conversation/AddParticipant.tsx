@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { token } from '../../../store/tokenContext';
+import { token } from '../../../store/TokenContext';
 import './AddParticipant.scss';
 
 interface User {

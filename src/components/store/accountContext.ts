@@ -5,6 +5,7 @@ export interface Account {
   email: string;
   isActive: boolean;
   avatarUrl: string;
+  sid: string;
 }
 
 const user: Account = JSON.parse(localStorage.getItem("user") || "{}");

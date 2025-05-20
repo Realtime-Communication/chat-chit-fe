@@ -6,15 +6,16 @@ import React, {
   useRef,
 } from "react";
 import "./ChatBox.scss";
-import { ChatContext } from "../ChatPage";
-import { decodeToken, token } from "../../../store/tokenContext";
-import VideoCall from "../../Call/Call";
+import { token } from "../../../store/TokenContext";
 import Success from "../../../Alert/Success";
-import Error from "../../../Alert/Error";
+import Error from "../../../Alert/ErrorAlert";
 import Emoji from "../../../Emoji/Emoji";
 import user, { Account } from "../../../store/accountContext";
 import InsertMessage from "../ChatItem/ChatItem";
-import useSocket from "../../../store/socket";
+import socketService from "../../../../socket/Socket";
+import { useConversation } from "../../../../hook/ConversationContext";
+import { CallProvider, useCall } from "../../../../hook/CallContext";
+import VideoCall from "../../Call/Call";
 
 export enum MessageType {
   text = "TEXT",
@@ -25,20 +26,15 @@ export enum MessageType {
 }
 
 export enum CallStatus {
-  INVITED,
-  MISSED,
-  ONGOING,
-  ENDED,
+  INVITED = "INVITED",
+  MISSED = "MISSED",
+  ONGOING = "ONGOING",
+  ENDED = "ENDED",
 }
 
-// export enum TargetType {
-//   ROOM,
-//   FRIEND,
-// }
-
 export enum CallType {
-  voice,
-  video,
+  voice = "VOICE",
+  video = "VIDEO",
 }
 
 export enum MessageStatus {
@@ -86,33 +82,18 @@ export interface ConversationVm {
 // Message response types
 export interface User {
   id: number;
+  sid: string;
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
   avatarUrl: string;
+  isActive: boolean;
 }
 
 export interface Attachment {
   thumbUrl: string;
   fileUrl: string;
 }
-
-// export interface MessageItem {
-//   id: number;
-//   guid: string;
-//   conversationId: number;
-//   targetType: TargetType;
-//   senderId: number;
-//   messageType: MessageType;
-//   content: string;
-//   createdAt: string;
-//   deletedAt: string | null;
-//   callType: CallType;
-//   callStatus: CallStatus;
-//   status: MessageStatus;
-//   user: User;
-//   attachments: Attachment[];
-// }
 
 export interface MessageResponse {
   statusCode: number;
@@ -128,7 +109,7 @@ export interface MessageResponse {
 
 export interface MessageDto {
   id?: number;
-  conversationId: number;
+  conversationId: number | undefined;
   guid?: number;
   conversationType?: ConversationType;
   messageType: MessageType;
@@ -141,13 +122,16 @@ export interface MessageDto {
   user?: Account;
 }
 
-export interface CallDto extends MessageDto {
-  callerInfomation: Account;
-  signalData: string;
+export interface CallDto extends Partial<MessageDto> {
+  callerInfomation?: Account;
+  signal: string;
+  conversation?: ConversationVm;
 }
 
-export interface CallResponseDto extends MessageDto {
+export interface CallResponseDto extends Partial<MessageDto> {
   signal: string;
+  callerInfomation: Account;
+  conversation: ConversationVm;
 }
 
 interface OtherInfo {
@@ -189,7 +173,9 @@ const getOtherInfo = (
       name: otherParticipant
         ? `Friend: ${otherParticipant.user.firstName} ${otherParticipant.user.lastName}`
         : "Unknown",
-      image: otherParticipant?.user.avatarUrl || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRI9lRck6miglY0SZF_BZ_sK829yiNskgYRUg&s',
+      image:
+        otherParticipant?.user.avatarUrl ||
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRI9lRck6miglY0SZF_BZ_sK829yiNskgYRUg&s",
       type: ConversationType.FRIEND,
       participants: conversation.participants,
     };
@@ -197,27 +183,28 @@ const getOtherInfo = (
 
   return {
     name: "Group: " + conversation.title,
-    image: otherParticipant?.user.avatarUrl || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg2EeQe-qNJinTWuKmUVZwpQnXkt6DudNoBQ&s",
+    image:
+      otherParticipant?.user.avatarUrl ||
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRg2EeQe-qNJinTWuKmUVZwpQnXkt6DudNoBQ&s",
     type: ConversationType.GROUP,
     participants: conversation.participants,
   };
 };
 
 export function ChatBox() {
-  const socket: any = useSocket;
-  if (!socket) return;
-
-  const context = useContext(ChatContext);
-  if (!context) return null;
-
-  const { conversationIdTransfer, setConversationIdTransfer, isShowRecent, setIsShowRecent } = context;
+  const { conversationId, setConversationId, isShowRecent, setIsShowRecent } =
+    useConversation();
+  const { conversation, setConversation } = useCall();
 
   const [otherInfo, setOtherInfo] = useState<OtherInfo>({
     name: "All",
     image: "",
     type: ConversationType.FRIEND,
   });
-  const [conversationId, setConversationId] = useState<number>(-1);
+
+  const [callWindow, setCallWindow] = useState<JSX.Element | undefined>(
+    <VideoCall />
+  );
   const [conversationInfo, setConversationInfo] = useState<ConversationVm>();
   const [chatsFriendRecent, setChatsFriendRecent] = useState<MessageDto[]>([]);
   const [isCall, setIsCall] = useState<"none" | "flex">("none");
@@ -226,7 +213,6 @@ export function ChatBox() {
   const [messageRecent, setMessageRecent] = useState<JSX.Element[]>([]);
   const submitRef = useRef<HTMLButtonElement>(null);
   const [isEmoji, setIsEmoji] = useState<boolean>(false);
-  const [myGroups, setMyGroups] = useState<number[]>([]);
   const [chatLimit, setChatLimit] = useState<number>(15);
   const [autoScroll, setAutoScroll] = useState<boolean>(true);
   const [showLoad, setShowLoad] = useState<boolean>(false);
@@ -234,21 +220,28 @@ export function ChatBox() {
   const [currentHeightOfChats, setCurrentHeightOfChats] = useState<
     number | undefined
   >(undefined);
-  const [option, setOption] = useState<number | undefined>(undefined);
   const [coop, setCoop] = useState<string>("");
-  const [resetCall, setResetCall] = useState<boolean>(true);
 
   // Update conversation when isLoad changes
+  // useEffect(() => {
+  //   if (conversationIdTransfer) {
+  //     setConversationId(conversationIdTransfer);
+  //     setAutoScroll(true);
+  //     setChatLimit(15);
+  //     if (inputRef.current) {
+  //       inputRef.current.focus();
+  //     }
+  //   }
+  // }, [conversationIdTransfer]);
   useEffect(() => {
-    if (conversationIdTransfer) {
-      setConversationId(conversationIdTransfer);
+    if (conversationId) {
       setAutoScroll(true);
       setChatLimit(15);
       if (inputRef.current) {
         inputRef.current.focus();
       }
     }
-  }, [conversationIdTransfer]);
+  }, [conversationId]);
 
   // Fetch conversation info
   useEffect(() => {
@@ -320,7 +313,7 @@ export function ChatBox() {
       .then((res) => res.json())
       .then((data: MessageResponse) => {
         if (data.data) {
-          setChatsFriendRecent(data.data.result);
+          setChatsFriendRecent(data.data.result || []);
           // setOtherName(data.data.otherName);
           // setOtherImage(data.data.otherImage);
         }
@@ -336,7 +329,10 @@ export function ChatBox() {
   };
 
   useEffect(() => {
-    fetchChat();
+    console.log(conversationId);
+    if (!conversationId) {
+      setChatsFriendRecent([]);
+    } else fetchChat();
   }, [conversationId]);
 
   // Render message recent with other friend now
@@ -354,7 +350,8 @@ export function ChatBox() {
       | React.MouseEvent<HTMLButtonElement>
       | React.FormEvent<HTMLFormElement>
   ) {
-    console.log(conversationId);
+    if (!conversationId) return;
+
     event.preventDefault();
     const input = document.getElementById(
       "input"
@@ -368,7 +365,7 @@ export function ChatBox() {
         content: input.value,
       };
 
-      socket.emit("sendMessage", msg);
+      socketService.emit("sendMessage", msg);
       input.value = "";
 
       setAutoScroll(true);
@@ -393,7 +390,7 @@ export function ChatBox() {
 
   // User is typing
   const typing = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    socket.emit("typing", { otherId: conversationId });
+    socketService.emit("typing", { otherId: conversationId });
   };
 
   const handleComingMessage = (msg: any) => {
@@ -424,19 +421,20 @@ export function ChatBox() {
     }
   };
 
-  useEffect(() => {}, [socket]);
+  useEffect(() => {}, []);
 
   // useEffect(() => {
-  //   socket.on("listOnline", (data: { listOnline: number[] }) => {
+  //   socketService.listen("listOnline", (data: { listOnline: number[] }) => {
   //     setListOnline(data.listOnline);
   //   });
   // }, [socket]);
 
   // RENDER incoming message realtime
   useEffect(() => {
-    socket.on("messageComing", handleComingMessage);
-    return () => socket.off("messageComing", handleComingMessage);
-  }, [conversationId, messageRecent, myGroups]);
+    socketService.listen("messageComing", handleComingMessage);
+    return () =>
+      socketService.offListener("messageComing", handleComingMessage);
+  }, [conversationId, messageRecent]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -466,7 +464,7 @@ export function ChatBox() {
 
   // Receiver call
   useEffect(() => {
-    socket.on("user_not_online", () => {
+    socketService.listen("userNotOnline", () => {
       setAlertTag(
         <Error
           value={[
@@ -477,57 +475,51 @@ export function ChatBox() {
       );
       setIsCall("none");
       setTimeout(() => setAlertTag(""), 5000);
-      setOption(undefined);
+      setConversation(undefined);
+
       setCoop("");
-      setResetCall(false);
     });
 
-    socket.on("open_call", (data: { callerName: string }) => {
+    socketService.listen("openCall", (data: CallResponseDto) => {
       setIsCall("flex");
-      setCoop(data.callerName + " calling to you");
+      setConversation(data.conversation);
     });
 
-    socket.on("refuse_call", () => {
+    socketService.listen("refuseCall", () => {
       setCoop("");
-      setOption(undefined);
       setIsCall("none");
       console.log("refuse");
-      setResetCall(false);
+      setConversation(undefined);
     });
 
-    socket.on("complete_close_call", () => {
+    socketService.listen("completeCloseCall", () => {
       console.log("complete_close_call");
       setCoop("");
-      setOption(undefined);
+      setConversation(undefined);
+
       setIsCall("none");
-      setResetCall(false);
     });
 
-    socket.on("give_up_call", () => {
+    socketService.listen("giveUpCall", (data: CallDto) => {
       setCoop("");
-      setOption(undefined);
       setIsCall("none");
-      setResetCall(false);
+      if (data.user?.id === user.id) setConversation(undefined);
     });
 
     return () => {
-      socket.off("user_not_online");
-      socket.off("open_call");
-      socket.off("refuse_call");
-      socket.off("complete_close_call");
-      socket.off("give_up_call");
+      socketService.offListener("userNotOnline");
+      socketService.offListener("openCall");
+      socketService.offListener("refuseCall");
+      socketService.offListener("completeCloseCall");
+      socketService.offListener("giveUpCall");
     };
   }, []);
-
-  useEffect(() => {
-    if (!resetCall) setResetCall(true);
-  }, [resetCall]);
 
   // Sending call
   const goCall = (e: React.MouseEvent<HTMLImageElement>) => {
     if (isCall === "none") {
+      setConversation(conversationInfo);
       setCoop(`You calling to ${otherInfo.name}`);
-      setOption(conversationId);
       setIsCall("flex");
     } else {
       window.alert(
@@ -538,7 +530,7 @@ export function ChatBox() {
 
   return (
     <>
-      <div>Channel ID = {conversationIdTransfer}</div>
+      <div>Channel ID = {conversationId}</div>
 
       {alertTag}
       <div className="header-bar">
@@ -549,7 +541,10 @@ export function ChatBox() {
           X
         </div>
         <div className="profile">
-          <img className="avatar" src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s' />
+          <img
+            className="avatar"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s"
+          />
           <div className="user-profile" onClick={checkProfile}>
             <b>{otherInfo ? otherInfo.name : "All"}</b>
           </div>
@@ -570,7 +565,10 @@ export function ChatBox() {
             {" "}
             Watashi <b>{user.lastName}</b>
           </div>
-          <img className="avatar" src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqTVkhCTegQ52T8whAahZj7gNfvJOywWFlOg&s' />
+          <img
+            className="avatar"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqTVkhCTegQ52T8whAahZj7gNfvJOywWFlOg&s"
+          />
         </div>
       </div>
       <div className="view-profile"></div>
@@ -587,7 +585,9 @@ export function ChatBox() {
         })}
       </div>
       <div className="video-call" style={{ display: isCall }}>
-        {resetCall ? <VideoCall props={option} /> : <></>}
+        {/* {resetCall && option ? ( */}
+        {callWindow}
+        {/* ) : null} */}
       </div>
       <div className="chat-message">
         <form id="form" className="form_chat" action="">
