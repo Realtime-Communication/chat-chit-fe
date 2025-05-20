@@ -11,10 +11,11 @@ import {
   User,
   CallResponseDto,
   MessageType,
-} from "../Chat/ChatBox/ChatBox";
-import socketService from "../../../socket/Socket";
-import user from "../../store/accountContext";
-import { useCall } from "../../../hook/CallContext";
+} from "../../Chat/ChatBox/ChatBox";
+import socketService from "../../../../socket/Socket";
+import user from "../../../store/accountContext";
+import { useCall } from "../../../../hook/CallContext";
+import SimplePeer from "simple-peer";
 interface SignalData {
   signal: any;
 }
@@ -23,24 +24,30 @@ interface CallParticipant {
   // participantId: number; // Changed to number to match userId
   // participantInfo: User;
   userVideo: HTMLVideoElement | undefined;
-  peer: Peer.Instance | null;
+  peer: SimplePeer.Instance | null;
   signal: string | null; // Added signal property
 }
 
+// flow: Gửi stream của mình cho người khác
+// flow: Nhận stream từ người khác
+// flow: Nhận stream từ người khác
+
 function VideoCall() {
-  const { conversation, setConversation } = useCall();
+  const { conversation } = useCall();
   const [myConversationState, setMyConversationState] = useState<
     CallDto | undefined
   >(undefined);
   const [stream, setStream] = useState<MediaStream | undefined>(undefined);
   const [receivingCall, setReceivingCall] = useState(false);
   const [caller, setCaller] = useState<User | undefined>(undefined);
+  const [signalComing, setSignalComing] = useState<string[]>([]);
   const [callerSignal, setCallerSignal] = useState<string>("");
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
 
   const myVideo = useRef<HTMLVideoElement>(null);
   const userVideos = useRef<CallParticipant[]>([]);
+  const peersRef = useRef<Map<number, SimplePeer.Instance>>(new Map());
 
   const [isCaller, setIsCaller] = useState(true);
   const [direction, setDirection] = useState(false);
@@ -59,10 +66,10 @@ function VideoCall() {
         console.error("Error accessing media devices:", error);
       });
 
-    socketService.listen("callUser", (data: CallDto) => {
+    socketService.listen("receivedSignal", (data: CallDto) => {
       setReceivingCall(true);
-      setCaller(data.callerInfomation);
       setCallerSignal(data.signal);
+      // setSignalComing((signalComing) => [...signalComing, data.signal]);
     });
   }, [conversation]);
 
@@ -119,7 +126,10 @@ function VideoCall() {
 
     peer.once("signal", (data: SignalData) => {
       console.log("call user 2");
-      socketService.emit("callUser", { ...myConversationState, signal: data });
+      socketService.emit("callUser", {
+        ...myConversationState,
+        signal: data,
+      });
     });
 
     peer.on("stream", (stream: MediaStream) => {
@@ -131,7 +141,6 @@ function VideoCall() {
     });
 
     socketService.listen("callAccepted", (call: CallResponseDto) => {
-      console.log("user had accept");
       setCallAccepted(true);
       peer.signal(call.signal);
     });
@@ -139,9 +148,8 @@ function VideoCall() {
     callParticipant.peer = peer;
   };
 
-  const answerCall = () => {
+  const joinCallAndSendSignal = () => {
     setIsCaller(false);
-    console.log("click accept");
     setCallAccepted(true);
 
     const peer = new Peer({
@@ -168,7 +176,6 @@ function VideoCall() {
       videoElement.srcObject = stream;
       callParticipant.userVideo = videoElement;
       userVideos.current.push(callParticipant);
-      console.log("Receiver received signal!");
     });
 
     peer.signal(callerSignal);
@@ -238,7 +245,7 @@ function VideoCall() {
           {receivingCall && !callAccepted ? (
             <div className="button-call">
               <h1 className="call-from">{"name"} Calling . . .</h1>
-              <button className="call-ac" onClick={answerCall}>
+              <button className="call-ac" onClick={joinCallAndSendSignal}>
                 Answer
               </button>
               <button className="call-ac" onClick={refuseCall}>
@@ -259,7 +266,7 @@ function VideoCall() {
                     isCaller
                       ? !receivingCall
                         ? callUser
-                        : answerCall
+                        : joinCallAndSendSignal
                       : undefined
                   }
                   autoPlay
@@ -316,7 +323,7 @@ function VideoCall() {
             )}
             {receivingCall && !callAccepted ? (
               <>
-                <button onClick={answerCall}>Answer</button>
+                <button onClick={joinCallAndSendSignal}>Answer</button>
                 <button onClick={refuseCall}>Refuse</button>
               </>
             ) : null}

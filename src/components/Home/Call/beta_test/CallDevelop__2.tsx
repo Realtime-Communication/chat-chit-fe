@@ -11,10 +11,10 @@ import {
   User,
   CallResponseDto,
   MessageType,
-} from "../Chat/ChatBox/ChatBox";
-import socketService from "../../../socket/Socket";
-import user from "../../store/accountContext";
-import { useCall } from "../../../hook/CallContext";
+} from "../../Chat/ChatBox/ChatBox";
+import socketService from "../../../../socket/Socket";
+import user from "../../../store/accountContext";
+import { useCall } from "../../../../hook/CallContext";
 import SimplePeer from "simple-peer";
 interface SignalData {
   signal: any;
@@ -32,7 +32,7 @@ interface CallParticipant {
 // flow: Nhận stream từ người khác
 // flow: Nhận stream từ người khác
 
-function VideoCall() {
+function VideoCallDevelop() {
   const { conversation } = useCall();
   const [myConversationState, setMyConversationState] = useState<
     CallDto | undefined
@@ -40,13 +40,13 @@ function VideoCall() {
   const [stream, setStream] = useState<MediaStream | undefined>(undefined);
   const [receivingCall, setReceivingCall] = useState(false);
   const [caller, setCaller] = useState<User | undefined>(undefined);
-  const [signalComing, setSignalComing] = useState<string[]>([]);
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
 
   const myVideo = useRef<HTMLVideoElement>(null);
   const userVideos = useRef<CallParticipant[]>([]);
   const peersRef = useRef<Map<number, SimplePeer.Instance>>(new Map());
+  const [signalComing, setSignalComing] = useState<string[]>([]);
 
   const [isCaller, setIsCaller] = useState(true);
   const [direction, setDirection] = useState(false);
@@ -105,49 +105,8 @@ function VideoCall() {
     });
   }, [conversation]);
 
-  // const joinCallAndSendSignalXXX = () => {
-  //   socketService.emit("sendMessage", myConversationState);
-
-  //   const peer = new Peer({
-  //     trickle: false,
-  //     stream: stream,
-  //     initiator: true,
-  //   });
-
-  //   const callParticipant: CallParticipant = {
-  //     userVideo: undefined,
-  //     peer: null,
-  //     signal: null,
-  //   };
-
-  //   peer.once("signal", (data: SignalData) => {
-  //     console.log("call user 2");
-  //     socketService.emit("sendSignal", {
-  //       ...myConversationState,
-  //       signal: data,
-  //     });
-  //   });
-
-  //   peer.on("stream", (stream: MediaStream) => {
-  //     const videoElement = document.createElement("video");
-  //     videoElement.srcObject = stream;
-
-  //     callParticipant.userVideo = videoElement;
-  //     userVideos.current.push(callParticipant);
-  //   });
-
-  //   socketService.listen("callAccepted", (call: CallResponseDto) => {
-  //     console.log("user had accept");
-  //     setCallAccepted(true);
-  //     peer.signal(call.signal);
-  //   });
-
-  //   callParticipant.peer = peer;
-  // };
-
   const callUser = () => {
     setIsCaller(false);
-    console.log("call user 1");
     socketService.emit("sendMessage", myConversationState);
 
     const peer = new Peer({
@@ -186,6 +145,39 @@ function VideoCall() {
     callParticipant.peer = peer;
   };
 
+  useEffect(() => {
+    socketService.listen("signalComing", (data: CallDto) => {
+      const peer = new Peer({
+        trickle: false,
+        stream: stream,
+        initiator: false,
+      });
+
+      const callParticipant: CallParticipant = {
+        userVideo: undefined,
+        peer: null,
+        signal: null,
+      };
+
+      peer.signal(data.signal);
+      peer.once("signal", (data: string) => {
+        socketService.emit("signalPairingCompleted", {
+          ...myConversationState,
+          signal: data,
+        });
+      });
+
+      peer.on("stream", (stream: MediaStream) => {
+        const videoElement = document.createElement("video");
+        videoElement.srcObject = stream;
+        callParticipant.userVideo = videoElement;
+        userVideos.current.push(callParticipant);
+      });
+    });
+
+    socketService.listen("signalPairingCompleted", (data: CallDto) => {});
+  }, []);
+
   const joinCallAndSendSignal = () => {
     setIsCaller(false);
     setCallAccepted(true);
@@ -203,7 +195,7 @@ function VideoCall() {
     };
 
     peer.once("signal", (data: string) => {
-      socketService.emit("sendSignal", {
+      socketService.emit("signalComing", {
         ...myConversationState,
         signal: data,
       });
@@ -216,9 +208,9 @@ function VideoCall() {
       userVideos.current.push(callParticipant);
     });
 
-    peer.signal(signalComing[signalComing.length - 1]);
-    callParticipant.signal = signalComing[signalComing.length - 1];
-    setSignalComing((prev) => prev.slice(0, -1));
+    // peer.signal(signalComing[signalComing.length - 1]);
+    // callParticipant.signal = signalComing[signalComing.length - 1];
+    // setSignalComing((prev) => prev.slice(0, -1));
     callParticipant.peer = peer;
   };
 
@@ -316,28 +308,24 @@ function VideoCall() {
             </div>
 
             <div className="user-video">
-              {callAccepted && !callEnded
-                ? userVideos.current.map((userVideo, index) => {
-                    return (
-                      <video
-                        className="rounded-full"
-                        playsInline
-                        ref={(el) => {
-                          if (
-                            el &&
-                            userVideo &&
-                            userVideo.userVideo?.srcObject
-                          ) {
-                            el.srcObject = userVideo.userVideo.srcObject;
-                          }
-                        }}
-                        onDoubleClick={leaveCall}
-                        autoPlay
-                        style={{ width: "300px" }}
-                      />
-                    );
-                  })
-                : null}
+              {/* {callAccepted && !callEnded ?  */}
+              {userVideos.current.map((userVideo, index) => {
+                return (
+                  <video
+                    className="rounded-full"
+                    playsInline
+                    ref={(el) => {
+                      if (el && userVideo && userVideo.userVideo?.srcObject) {
+                        el.srcObject = userVideo.userVideo.srcObject;
+                      }
+                    }}
+                    onDoubleClick={leaveCall}
+                    autoPlay
+                    style={{ width: "300px" }}
+                  />
+                );
+              })}
+              {/* : null} */}
             </div>
           </div>
         </div>
@@ -392,4 +380,4 @@ function VideoCall() {
   );
 }
 
-export default VideoCall;
+export default VideoCallDevelop;
