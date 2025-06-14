@@ -5,6 +5,7 @@ import LayoutDefault from "../components/LayoutDefault/LayoutDefault";
 import Login from "../components/Auth/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import Home from "../components/Home/Home";
+import Register from "../components/Auth/Register";
 
 export const appRoutes: RouteObject[] = [
   {
@@ -19,10 +20,10 @@ export const appRoutes: RouteObject[] = [
         path: "login",
         element: <Login />,
       },
-      // {
-      //   path: "register",
-      //   element: <Register />,
-      // },
+      {
+        path: "register",
+        element: <Register />,
+      },
       {
         path: "home",
         element: (
