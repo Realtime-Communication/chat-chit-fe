@@ -1,7 +1,7 @@
 import React, { use, useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
 import Draggable from "react-draggable";
-import "./Call.scss";
+import "./call.scss";
 import {
   ConversationVm,
   CallType,
