@@ -54,7 +54,7 @@ const Register: React.FC = () => {
     role: "USER", // Default role
   });
 
-  const [alertTag, setAlertTag] = useState<JSX.Element | undefined>();
+  const [alertTag, setAlertTag] = useState();
 
   const submitForm = (): void => {
     // Prepare data according to the new DTO structure

@@ -1,23 +1,10 @@
-import { jwtDecode } from "jwt-decode";
-import { token } from "../store/TokenContext";
-import React, { useEffect, useState, FormEvent, ChangeEvent } from "react";
+import React, { useState, FormEvent, ChangeEvent } from "react";
 import { NavLink } from "react-router-dom";
-import Success from "../Alert/Success";
-import "./Auth.scss";
+import { loginAccount } from "../../api/Auth.api";
 import ErrorAlert from "../Alert/ErrorAlert";
-import { Account } from "../store/accountContext";
-
-interface LoginResponse {
-  statusCode: string,
-  message: string,
-  data: {
-    user: Account;
-    accessToken: string;
-  };
-}
+import Success from "../Alert/Success";
 
 const Login: React.FC = () => {
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -26,50 +13,23 @@ const Login: React.FC = () => {
   const [hasLogin, setHasLogin] = useState(false);
   const [alertTag, setAlertTag] = useState<JSX.Element | string>();
 
-  useEffect(() => {
-    // You can optionally decode an existing token or check for login
-    // if (token) {
-    //   const decoded = jwtDecode(token) as { email?: string; sub?: string };
-    //   if (decoded.email && decoded.sub) {
-    //     setHasLogin(true);
-    //   }
-    // }
-  }, []);
-
   const submitForm = async () => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const result: LoginResponse = await res.json();
-      const data = result.data;
-
-      if (!data?.accessToken) throw new Error("Login failed");
-
-      document.cookie = `accessToken=${data.accessToken}`;
-      localStorage.setItem("user", JSON.stringify(data.user));
-      console.log(`access_token=${data.accessToken}`);
+      await loginAccount(formData);
       setHasLogin(true);
 
       setAlertTag(
-        <Success
-          value={["Login Success", "You will navigate to chat page after 3s !"]}
-        />
+        <Success value={["Login Success", "You will navigate to chat page after 3s !"]} />
       );
+
       setTimeout(() => {
         setAlertTag("");
-      }, 6000);
-
+        window.location.href = "/home";
+      }, 3000);
     } catch (error) {
       setAlertTag(
         <ErrorAlert value={["Login Fail", "Error email or password !"]} />
       );
-      
       setTimeout(() => {
         setAlertTag("");
       }, 8000);
@@ -87,42 +47,61 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="login-page">
-      {alertTag}
-      {!hasLogin ? (
-        <form onSubmit={handleFormSubmit} className="form-login">
-          <div className="submit_center">
-            <h2 className="title">Welcome To Talk Together</h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#e8f0fe]">
+      <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
+        {alertTag && <div className="mb-4">{alertTag}</div>}
+
+        <h2 className="text-2xl font-semibold text-center text-[#0088cc] mb-6">
+          Welcome to Talk Together
+        </h2>
+
+        <form onSubmit={handleFormSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              User Email
+            </label>
+            <input
+              type="text"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0088cc]"
+              required
+            />
           </div>
-          <label>User Email</label>
-          <input
-            type="text"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-          />
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-          />
-          <div className="submit_center">
-            <button type="submit">Login</button>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0088cc]"
+              required
+            />
           </div>
-          <div className="submit_center">
-            <NavLink to="/register" className={"register"}>
-              Touch me to register new account
+
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              className="bg-[#0088cc] hover:bg-[#007ab8] text-white font-semibold py-2 px-6 rounded-full transition duration-300"
+            >
+              Login
+            </button>
+          </div>
+
+          <div className="text-center">
+            <NavLink to="/register" className="text-[#0088cc] hover:underline">
+              Don't have an account? Register
             </NavLink>
           </div>
-          <div className="notice">
-            The server takes a few minutes to start up for the new day
-          </div>
         </form>
-      ) : (
-        (window.location.href = "/home")
-      )}
+      </div>
     </div>
   );
 };
