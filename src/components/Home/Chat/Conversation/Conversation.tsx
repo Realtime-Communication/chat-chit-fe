@@ -12,167 +12,19 @@ import AddParticipant from "./AddParticipant";
 import user from "../../../store/accountContext";
 import socketService from "../../../../socket/Socket";
 import { useConversation } from "../../../../hook/ConversationContext";
-
-export enum ConversationType {
-  GROUP = 0,
-  FRIEND = 1,
+import {
+  ConversationType, CreateConversationResponse, Friend, FriendRequest,
+  FriendRequestApiResponse, FriendRequestResponse, IConversation
 }
-
-interface Participant {
-  id: number;
-  name?: string;
-  userId: number;
-  type: string;
-}
-
-interface Message {
-  senderId: number;
-  content: string;
-  createdAt: string;
-}
-
-interface Conversation {
-  id: number;
-  name: string;
-  image: string;
-  msgTime: string;
-  content: string;
-  conversationType: ConversationType;
-  participants: Participant[];
-}
-
-interface FriendRequest {
-  id: number;
-  requester_id: number;
-  receiver_id: number;
-  status: "PENDING" | "ACCEPTED" | "REJECTED";
-  created_at: string;
-  requester: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  receiver: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-}
-
-interface FriendRequestResponse {
-  page: number;
-  size: number;
-  totalPage: number;
-  totalElement: number;
-  result: FriendRequest[];
-}
-
-interface FriendRequestData {
-  id: number;
-  requesterId: number;
-  receiverId: number;
-  status: string;
-  createdAt: string;
-  requester: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    isActive: boolean;
-  };
-  receiver: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    isActive: boolean;
-  };
-}
-
-interface FriendRequestApiResponse {
-  statusCode: number;
-  message: string;
-  data: {
-    page: number;
-    size: number;
-    totalPage: number;
-    totalElement: number;
-    result: FriendRequestData[];
-  };
-}
-
-interface CreateConversationResponse {
-  id: number;
-  title: string;
-  creator_id: number;
-  channel_id: number;
-  created_at: string;
-  updated_at: string;
-  deleted_at: null | string;
-  avatar_url: string;
-  participants: {
-    id: number;
-    conversation_id: number;
-    user_id: number;
-    type: "LEAD" | "MEMBER";
-    created_at: string;
-    updated_at: string;
-    user: {
-      id: number;
-      firstName: string;
-      lastName: string;
-      email: string;
-      isActive: boolean;
-    };
-  }[];
-}
-
-interface AddParticipantResponse {
-  statusCode: number;
-  message: string;
-  data: {
-    id: number;
-    conversation_id: number;
-    user_id: number;
-    type: "LEAD" | "MEMBER";
-    created_at: string;
-    updated_at: string;
-    user: {
-      id: number;
-      firstName: string;
-      lastName: string;
-      email: string;
-      isActive: boolean;
-    };
-  };
-}
-
-interface Friend {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  isActive: boolean;
-}
-
-interface FriendResponse {
-  page: number;
-  size: number;
-  totalPage: number;
-  totalElement: number;
-  result: Friend[];
-}
+  from "../../../../api/User.int";
+import { fetchConversationsAPI } from "../../../../api/Chat.api";
+import { addFriend } from "../../../../api/User.api";
 
 export function Conversation() {
-  
   const { conversationId, setConversationId, isShowRecent, setIsShowRecent } =
     useConversation();
 
-  const [conversationRecent, setConversationRecent] = useState<Conversation[]>(
-    []
-  );
+  const [conversationRecent, setConversationRecent] = useState<IConversation[]>([]);
   const [listOnline, setListOnline] = useState<number[]>([]);
   const [userTyping, setUserTyping] = useState<number[]>([]);
   const [showAddFriend, setShowAddFriend] = useState(false);
@@ -182,19 +34,17 @@ export function Conversation() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showCreateConversation, setShowCreateConversation] = useState(false);
-  const [selectedFriend, setSelectedFriend] = useState<FriendRequest | null>(
-    null
-  );
+  const [selectedFriend, setSelectedFriend] = useState<FriendRequest | null>(null);
   const [conversationTitle, setConversationTitle] = useState("");
   const [showAddParticipant, setShowAddParticipant] = useState(false);
   const [selectedConversation, setSelectedConversation] =
-    useState<Conversation | null>(null);
+    useState<IConversation | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
   const [showFriendSelection, setShowFriendSelection] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedConversationForImage, setSelectedConversationForImage] =
-    useState<Conversation | null>(null);
+    useState<IConversation | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -231,7 +81,7 @@ export function Conversation() {
     setConversationId(value);
   };
 
-  const mapApiResponseToConversation = (item: any): Conversation => {
+  const mapApiResponseToConversation = (item: any): IConversation => {
     const lastMsg = item.lastMessage;
     const content = lastMsg
       ? `${lastMsg.user?.firstName || "User"}: ${lastMsg.content}`
@@ -273,16 +123,10 @@ export function Conversation() {
 
   const fetchConversations = async () => {
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API}/conversations?page=1&size=20`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const json = await res.json();
+      const json = await fetchConversationsAPI();
       const conversations = json.data?.result ?? [];
 
-      const formatted: Conversation[] = conversations
+      const formatted: IConversation[] = conversations
         .map(mapApiResponseToConversation)
         .sort(
           (a: any, b: any) =>
@@ -321,14 +165,7 @@ export function Conversation() {
 
   const handleAddFriend = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API}/friends`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email }),
-      });
+      const response = await addFriend({email});
 
       if (response.ok) {
         const data = await response.json();
@@ -429,7 +266,7 @@ export function Conversation() {
       const data = await response.json();
       if (data.statusCode === 201) {
         const conversationData: CreateConversationResponse = data.data;
-        const newConversation: Conversation = {
+        const newConversation: IConversation = {
           id: conversationData.id,
           name: conversationData.title,
           image: conversationData.avatar_url,
@@ -498,7 +335,7 @@ export function Conversation() {
     (req) => req.status === "PENDING"
   );
 
-  const handleConversationClick = (conversation: Conversation) => {
+  const handleConversationClick = (conversation: IConversation) => {
     // setSelectedConversation(conversation);
     // setShowAddParticipant(true);
   };
@@ -518,7 +355,7 @@ export function Conversation() {
     });
   };
 
-  const handleImageClick = (conversation: Conversation, e: MouseEvent) => {
+  const handleImageClick = (conversation: IConversation, e: MouseEvent) => {
     e.stopPropagation();
     setSelectedConversationForImage(conversation);
     setImageUrl(conversation.image);
@@ -697,11 +534,10 @@ export function Conversation() {
                   {friends.map((friend) => (
                     <div
                       key={friend.id}
-                      className={`friend-item ${
-                        selectedFriends.some((f) => f.id === friend.id)
-                          ? "selected"
-                          : ""
-                      }`}
+                      className={`friend-item ${selectedFriends.some((f) => f.id === friend.id)
+                        ? "selected"
+                        : ""
+                        }`}
                       onClick={() => toggleFriendSelection(friend)}
                     >
                       <span className="name">

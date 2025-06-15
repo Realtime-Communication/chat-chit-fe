@@ -1,86 +1,69 @@
-import React, { Context, createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Conversation } from "./Conversation/Conversation";
-import "./ChatPage.scss";
 import { ChatBox } from "./ChatBox/ChatBox";
-import {
-  ConversationProvider,
-  useConversation,
-} from "../../../hook/ConversationContext";
+import { useConversation } from "../../../hook/ConversationContext";
 import { CallProvider } from "../../../hook/CallContext";
 
-// // Define the shape of the context
-// export interface ChatContextType {
-//   conversationIdTransfer: number;
-//   setConversationIdTransfer: React.Dispatch<React.SetStateAction<number>>;
-//   isShowRecent: boolean;
-//   setIsShowRecent: React.Dispatch<React.SetStateAction<boolean>>;
-// }
-
-// // Create the context with default values
-// export let ChatContext = createContext<ChatContextType>({
-//   conversationIdTransfer: -1,
-//   setConversationIdTransfer: () => {}, // no-op function
-//   isShowRecent: true,
-//   setIsShowRecent: () => {}, // no-op function
-// });
-
 export function Chat() {
-  const { conversationId, setConversationId, isShowRecent, setIsShowRecent } =
-    useConversation();
+  const {
+    conversationId,
+    setConversationId,
+    isShowRecent,
+    setIsShowRecent,
+  } = useConversation();
 
-  const objectShowChatRecent: React.CSSProperties = {
-    display: "flex",
-    width: "100%",
-  };
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 500);
 
-  const objectHideChatRecent: React.CSSProperties = {
-    display: "none",
-  };
-
-  const userWidth: number = window.innerWidth;
-  console.log(userWidth);
+  // Cập nhật khi thay đổi kích thước cửa sổ
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 500);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
-    <>
-      {
-        <div className="chat">
-          <div
-            className="chat_recent"
-            style={
-              userWidth <= 500
-                ? isShowRecent
-                  ? objectShowChatRecent
-                  : objectHideChatRecent
-                : {}
-            }
-          >
-            <Conversation />
-            {isShowRecent && (
-              <div
-                className="show_recent"
-                onClick={() => setIsShowRecent(!isShowRecent)}
-              >
-                X
-              </div>
-            )}
-          </div>
-          <div
-            className="chat_message"
-            style={
-              userWidth <= 500
-                ? isShowRecent
-                  ? objectHideChatRecent
-                  : objectShowChatRecent
-                : {}
-            }
-          >
-            <CallProvider>
-              <ChatBox />
-            </CallProvider>
-          </div>
+    <div className="flex h-[calc(100vh-64px)]">
+      {/* Sidebar hội thoại */}
+      <div
+        className={`transition-all duration-300 ${
+          isMobile
+            ? isShowRecent
+              ? "w-full"
+              : "hidden"
+            : "w-[30%] border-r border-gray-300"
+        }`}
+      >
+        <div className="h-full relative">
+          <Conversation />
+          {isMobile && isShowRecent && (
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+              onClick={() => setIsShowRecent(false)}
+              title="Close"
+            >
+              ✕
+            </button>
+          )}
         </div>
-      }
-    </>
+      </div>
+
+      {/* Hộp thoại chat */}
+      <div
+        className={`transition-all duration-300 flex-1 ${
+          isMobile
+            ? isShowRecent
+              ? "hidden"
+              : "w-full"
+            : "w-[70%]"
+        }`}
+      >
+        <CallProvider>
+          <ChatBox />
+        </CallProvider>
+      </div>
+    </div>
   );
 }
 

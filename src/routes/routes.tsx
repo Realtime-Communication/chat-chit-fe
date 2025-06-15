@@ -1,6 +1,4 @@
-import React from "react";
 import { RouteObject } from "react-router-dom";
-import IntroScreen from "../components/IntroScreen/IntroScreen";
 import LayoutDefault from "../components/LayoutDefault/LayoutDefault";
 import Login from "../components/Auth/Login";
 import ProtectedRoute from "./ProtectedRoute";
@@ -9,8 +7,10 @@ import Register from "../components/Auth/Register";
 
 export const appRoutes: RouteObject[] = [
   {
+    // path: "/",
+    // element: <IntroScreen />,
     path: "/",
-    element: <IntroScreen />,
+    element: <Login />,
   },
   {
     path: "/",

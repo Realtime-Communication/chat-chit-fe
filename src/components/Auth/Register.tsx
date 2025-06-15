@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import Error from "../Alert/ErrorAlert";
-import { FormData, registerAccount, RegisterRequest } from "../../api/Auth.api";
+import { registerAccount} from "../../api/Auth.api";
 import Success from "../Alert/Success";
+import { FormData, RegisterRequest } from "../../api/Auth.int";
 
 const Register: React.FC = () => {
   const navigate = useNavigate();

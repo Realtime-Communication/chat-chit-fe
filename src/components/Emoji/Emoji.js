@@ -16,7 +16,7 @@ export default function Emoji(props) {
         {chosenEmoji ? (
           <span>
             Your Emoji:
-            <img style={{ width: "15px" }} src={chosenEmoji.target.src} />
+            <img style={{ width: "15px" }} src={chosenEmoji.target.src} alt=""/>
           </span>
         ) : (
           <span>No Emoji</span>
