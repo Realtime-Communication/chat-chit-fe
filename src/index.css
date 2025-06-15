@@ -23,3 +23,7 @@ iframe#webpack-dev-server-client-overlay {
 *::-webkit-scrollbar {
   display: none;
 }
+
+.input-style {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088cc];
+}

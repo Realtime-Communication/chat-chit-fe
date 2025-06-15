@@ -2,8 +2,6 @@ import React, { useState, FormEvent, ChangeEvent } from "react";
 import { NavLink } from "react-router-dom";
 import { loginAccount } from "../../api/Auth.api";
 import ErrorAlert from "../Alert/ErrorAlert";
-import Success from "../Alert/Success";
-
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -17,15 +15,7 @@ const Login: React.FC = () => {
     try {
       await loginAccount(formData);
       setHasLogin(true);
-
-      setAlertTag(
-        <Success value={["Login Success", "You will navigate to chat page after 3s !"]} />
-      );
-
-      setTimeout(() => {
-        setAlertTag("");
-        window.location.href = "/home";
-      }, 3000);
+      window.location.href = "/home";
     } catch (error) {
       setAlertTag(
         <ErrorAlert value={["Login Fail", "Error email or password !"]} />
