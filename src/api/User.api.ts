@@ -60,3 +60,4 @@ export const postFriendRequest = async (requestId: number) => {
   }
   return response.json();
 };
+

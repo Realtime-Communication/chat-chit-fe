@@ -1,36 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { token } from '../../../store/TokenContext';
 import './AddParticipant.scss';
+import { AddParticipantProps, FriendAP } from '../../../../api/User.int';
 
-interface User {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  is_active: boolean;
-}
-
-interface Friend {
-  id: number;
-  requester_id: number;
-  receiver_id: number;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
-  requester: User;
-  receiver: User;
-}
-
-interface AddParticipantProps {
-  conversationId: number;
-  onParticipantAdded: () => void;
-  onClose: () => void;
-}
 
 export const AddParticipant: React.FC<AddParticipantProps> = ({
   conversationId,
   onParticipantAdded,
   onClose,
 }) => {
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friends, setFriends] = useState<FriendAP[]>([]);
   const [selectedEmail, setSelectedEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,7 +31,7 @@ export const AddParticipant: React.FC<AddParticipantProps> = ({
       const data = await response.json();
       if (data.statusCode === 200) {
         const acceptedFriends = data.data.result.filter(
-          (friend: Friend) => friend.status === 'ACCEPTED'
+          (friend: FriendAP) => friend.status === 'ACCEPTED'
         );
         setFriends(acceptedFriends);
       }

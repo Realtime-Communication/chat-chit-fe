@@ -149,3 +149,26 @@ export interface FriendResponse {
   totalElement: number;
   result: Friend[];
 }
+
+export interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  is_active: boolean;
+}
+
+export interface FriendAP {
+  id: number;
+  requester_id: number;
+  receiver_id: number;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  requester: User;
+  receiver: User;
+}
+
+export interface AddParticipantProps {
+  conversationId: number;
+  onParticipantAdded: () => void;
+  onClose: () => void;
+}
