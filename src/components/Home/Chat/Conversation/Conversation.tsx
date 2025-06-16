@@ -17,8 +17,8 @@ import {
   FriendRequestApiResponse, FriendRequestResponse, IConversation
 }
   from "../../../../api/User.int";
-import { fetchConversationsAPI } from "../../../../api/Chat.api";
-import { addFriend } from "../../../../api/User.api";
+import { createConversation, fetchConversationsAPI, updateImageUrl, uploadImage } from "../../../../api/Chat.api";
+import { addFriend, fetchFriendRequestedAPI, fetchFriendsAPI, postFriendRequest } from "../../../../api/User.api";
 
 export function Conversation() {
   const { conversationId, setConversationId, isShowRecent, setIsShowRecent } =
@@ -183,15 +183,7 @@ export function Conversation() {
 
   const fetchFriendRequested = async () => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API}/friends/requested?page=${currentPage}&size=10`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
+      const data = await fetchFriendRequestedAPI(currentPage);
       if (data.statusCode === 200) {
         const friendData: FriendRequestResponse = data.data;
         setFriendRequests(friendData.result);
@@ -204,15 +196,7 @@ export function Conversation() {
 
   const fetchFriends = async () => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API}/friends/accepted?page=1&size=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data: FriendRequestApiResponse = await response.json();
+      const data: FriendRequestApiResponse = await fetchFriendsAPI();
       if (data.statusCode === 200) {
         const friends: Friend[] = data.data.result.map((request) => {
           if (request.requesterId === user.id) {
@@ -233,29 +217,19 @@ export function Conversation() {
       return;
     }
 
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API}/conversations/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: conversationTitle || "New Conversation",
-            channelId: 2,
-            avatarUrl:
-              "https://st.gamevui.vn/images/image/gamehanhdong/Songoku-bao-ve-size-111x111-znd.jpg",
-            participants: selectedFriends.map((friend) => ({
-              userId: friend.id,
-              type: "MEMBER",
-            })),
-          }),
-        }
-      );
+    const body = {
+      title: conversationTitle || "New Conversation",
+      channelId: 2,
+      avatarUrl:
+        "https://st.gamevui.vn/images/image/gamehanhdong/Songoku-bao-ve-size-111x111-znd.jpg",
+      participants: selectedFriends.map((friend) => ({
+        userId: friend.id,
+        type: "MEMBER",
+      })),
+    };
 
-      const data = await response.json();
+    try {
+      const data = await createConversation(body);
       if (data.statusCode === 201) {
         const conversationData: CreateConversationResponse = data.data;
         const newConversation: IConversation = {
@@ -288,18 +262,7 @@ export function Conversation() {
 
   const handleFriendRequest = async (requestId: number, accept: boolean) => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API}/friends/${requestId}/accept`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
+      const data = await postFriendRequest(requestId);
       if (data.statusCode === 201) {
         const friendRequest = friendRequests.find(
           (req) => req.id === requestId
@@ -392,18 +355,7 @@ export function Conversation() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const response = await fetch(
-        `${process.env.REACT_APP_API}/conversations/${selectedConversationForImage?.id}/avatar`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
+      const data = await uploadImage(formData, selectedConversationForImage?.id || 0);
       if (data.statusCode === 200) {
         setImageUrl(data.data.avatarUrl);
         setConversationRecent((prev) =>
@@ -428,20 +380,12 @@ export function Conversation() {
       return;
     }
 
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API}/conversations/${selectedConversationForImage?.id}/avatar`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ avatarUrl: imageUrl }),
-        }
-      );
+    const body = {
+      avatarUrl: imageUrl,
+    };
 
-      const data = await response.json();
+    try {
+      const data = await updateImageUrl(body, selectedConversationForImage?.id || 0);
       if (data.statusCode === 200) {
         setConversationRecent((prev) =>
           prev.map((conv) =>

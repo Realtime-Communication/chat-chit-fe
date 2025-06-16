@@ -42,7 +42,7 @@ export const AddParticipant: React.FC<AddParticipantProps> = ({
   const fetchFriends = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API}/friends?page=1&size=100`,
+        `http://localhost:8080/friends?page=1&size=100`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -73,7 +73,7 @@ export const AddParticipant: React.FC<AddParticipantProps> = ({
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API}/conversations/${conversationId}/participants`,
+        `http://localhost:8080/conversations/${conversationId}/participants`,
         {
           method: 'POST',
           headers: {
