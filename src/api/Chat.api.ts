@@ -63,3 +63,4 @@ export const updateImageUrl = async (body: Record<string, any>, id: number) => {
   }
   return response.json();
 }
+

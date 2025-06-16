@@ -1,7 +1,5 @@
-import React, { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
-import Draggable from "react-draggable";
-import "./call.scss";
 import {
   ConversationVm,
   CallType,
@@ -35,7 +33,6 @@ function VideoCall() {
   const myVideo = useRef<HTMLVideoElement>(null);
 
   const [isCaller, setIsCaller] = useState(true);
-  const [optionCall, setOptionCall] = useState(false);
   const [direction, setDirection] = useState(false);
 
   useEffect(() => {
@@ -72,7 +69,7 @@ function VideoCall() {
     setMyConversationState({
       conversationId: conversation?.id,
       conversationType: conversation?.type,
-      content: `📞 We have a video call from ${'name'} 📞 at ${new Date().toLocaleString(
+      content: `📞 We have a video call 📞 at ${new Date().toLocaleString(
         "en-US",
         {
           year: "numeric",
@@ -94,7 +91,6 @@ function VideoCall() {
 
   const callUser = () => {
     setIsCaller(false);
-    console.log("call user 1");
     socketService.emit("sendMessage", myConversationState);
 
     const peer = new Peer({
@@ -104,19 +100,16 @@ function VideoCall() {
     });
 
     peer.once("signal", (data: SignalData) => {
-      console.log("call user 2");
       socketService.emit("callUser", { ...myConversationState, signal: data });
     });
 
     peer.on("stream", (stream: MediaStream) => {
       if (userVideo.current) {
         userVideo.current.srcObject = stream;
-        console.log("Caller received signal!");
       }
     });
 
     socketService.listen("callAccepted", (call: CallResponseDto) => {
-      console.log("user had accept");
       setCallAccepted(true);
       peer.signal(call.signal);
     });
@@ -126,7 +119,6 @@ function VideoCall() {
 
   const answerCall = () => {
     setIsCaller(false);
-    console.log("click accept");
     setCallAccepted(true);
     const peer = new Peer({
       initiator: false,
@@ -143,7 +135,6 @@ function VideoCall() {
 
     peer.on("stream", (stream: MediaStream) => {
       if (userVideo.current) {
-        console.log("Receiver received signal!");
         userVideo.current.srcObject = stream;
       }
     });
@@ -160,11 +151,9 @@ function VideoCall() {
     setCallEnded(true);
     if (connectionRef.current) {
       try {
-        console.log("prepare removeStream");
         connectionRef.current.removeStream(stream!);
         if (connectionRef.current.writable) {
           connectionRef.current.send("something");
-          console.log("has write something");
         }
       } catch (error) {
         console.log(error);
@@ -178,131 +167,127 @@ function VideoCall() {
   };
 
   return (
-    <div className="call-page">
-      <Draggable>
-        <div className="video-call">
-          <div className="button-call">
-            {callAccepted && !callEnded ? (
-              <div>
-                <button className="give-up-call" onClick={leaveCall}>
-                  End Call
-                </button>
-                <button className="start-call" onClick={changeDirection}>
-                  C.Direction
-                </button>
-              </div>
-            ) : (
-              !receivingCall && (
-                <div>
-                  <button className="start-call" onClick={callUser}>
-                    {connectionRef.current ? "Calling..." : "Start Call"}
-                  </button>
-                  <button
-                    className="give-up-call"
-                    onClick={() => {
-                      socketService.emit("giveUpCall", myConversationState);
-                    }}
-                  >
-                    Give Up
-                  </button>
-                </div>
-              )
-            )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+      <div className="relative w-full max-w-lg mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 flex flex-col gap-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
+              alt="Telegram"
+              className="w-7 h-7"
+            />
+            <span className="font-semibold text-[#0088cc] text-lg">Video Call</span>
           </div>
+          <button
+            className="text-gray-400 hover:text-red-500 text-2xl"
+            onClick={leaveCall}
+            title="End Call"
+          >
+            ✕
+          </button>
+        </div>
 
-          {receivingCall && !callAccepted ? (
-            <div className="button-call">
-              <h1 className="call-from">{'name'} Calling . . .</h1>
-              <button className="call-ac" onClick={answerCall}>
-                Answer
-              </button>
-              <button className="call-ac" onClick={refuseCall}>
-                Refuse
-              </button>
-            </div>
-          ) : null}
-
-          <div className={direction ? "video-flex-column" : "video-flex-row"}>
-            <div className="video--">
-              {stream && (
+        {/* Video Area */}
+        <div className={`flex ${direction ? "flex-col" : "flex-row"} gap-2 sm:gap-4 items-center justify-center`}>
+          {/* My Video */}
+          <div className="flex flex-col items-center">
+            <video
+              className="rounded-xl border border-gray-200 bg-gray-100 w-32 h-32 sm:w-48 sm:h-48 object-cover"
+              playsInline
+              muted
+              ref={myVideo}
+              onDoubleClick={
+                isCaller
+                  ? !receivingCall
+                    ? callUser
+                    : answerCall
+                  : undefined
+              }
+              autoPlay
+            />
+            <span className="text-xs text-gray-500 mt-1">You</span>
+          </div>
+          {/* User Video */}
+          <div className="flex flex-col items-center">
+            {callAccepted && !callEnded ? (
+              <>
                 <video
-                  className="rounded-full"
-                  playsInline
-                  muted
-                  ref={myVideo}
-                  onDoubleClick={
-                    isCaller
-                      ? !receivingCall
-                        ? callUser
-                        : answerCall
-                      : undefined
-                  }
-                  autoPlay
-                  style={{ width: "300px" }}
-                />
-              )}
-            </div>
-
-            <div className="user-video">
-              {callAccepted && !callEnded ? (
-                <video
-                  className="rounded-full"
+                  className="rounded-xl border border-gray-200 bg-gray-100 w-32 h-32 sm:w-48 sm:h-48 object-cover"
                   playsInline
                   ref={userVideo}
                   onDoubleClick={leaveCall}
                   autoPlay
-                  style={{ width: "300px" }}
                 />
-              ) : null}
-            </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  {caller?.firstName || "Other"}
+                </span>
+              </>
+            ) : (
+              <div className="w-32 h-32 sm:w-48 sm:h-48 flex items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-400">
+                <span className="text-sm">Waiting...</span>
+              </div>
+            )}
           </div>
         </div>
-      </Draggable>
-      <div className="option-call">
-        {optionCall ? (
-          <div className="option-call">
-            {callAccepted && !callEnded ? (
-              <button onClick={leaveCall}>Stop Call</button>
-            ) : (
-              !receivingCall && (
-                <>
-                  <button onClick={callUser}>Start Call</button>
-                  <button
-                    onClick={() => {
-                      socketService.emit("giveUpCall", myConversationState);
-                    }}
-                  >
-                    Give Up
-                  </button>
-                </>
-              )
-            )}
-            {receivingCall && !callAccepted ? (
-              <>
-                <button onClick={answerCall}>Answer</button>
-                <button onClick={refuseCall}>Refuse</button>
-              </>
-            ) : null}
-            <button
-              onClick={(e) => {
-                const target = e.currentTarget.parentElement;
-                if (target) target.classList.toggle("option-column");
-              }}
-            >
-              C.Direction
-            </button>
-            <button
-              onClick={() => setOptionCall(false)}
-              className="button-option"
-            >
-              Close Option
-            </button>
-          </div>
-        ) : (
-          <button onClick={() => setOptionCall(true)} className="button-option">
-            Option Call
-          </button>
-        )}
+
+        {/* Call Controls */}
+        <div className="flex flex-col gap-2 mt-2">
+          {callAccepted && !callEnded ? (
+            <div className="flex gap-2 justify-center">
+              <button
+                className="px-4 py-2 bg-[#ff5c5c] hover:bg-[#e44c4c] text-white rounded-full font-medium"
+                onClick={leaveCall}
+              >
+                End Call
+              </button>
+              <button
+                className="px-4 py-2 bg-[#e3f2fd] hover:bg-[#b3e5fc] text-[#0088cc] rounded-full font-medium"
+                onClick={changeDirection}
+              >
+                Change Layout
+              </button>
+            </div>
+          ) : !receivingCall ? (
+            <div className="flex gap-2 justify-center">
+              <button
+                className="px-4 py-2 bg-[#0088cc] hover:bg-[#007ab8] text-white rounded-full font-medium"
+                onClick={callUser}
+                disabled={!!connectionRef.current}
+              >
+                {connectionRef.current ? "Calling..." : "Start Call"}
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full font-medium"
+                onClick={() => socketService.emit("giveUpCall", myConversationState)}
+              >
+                Give Up
+              </button>
+            </div>
+          ) : null}
+
+          {receivingCall && !callAccepted && (
+            <div className="flex flex-col gap-2 items-center">
+              <span className="font-medium text-[#0088cc] text-base">
+                {caller?.firstName || "Someone"} is calling...
+              </span>
+              <div className="flex gap-2">
+                <button
+                  className="px-4 py-2 bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-full font-medium"
+                  onClick={answerCall}
+                >
+                  Answer
+                </button>
+                <button
+                  className="px-4 py-2 bg-[#ff5c5c] hover:bg-[#e44c4c] text-white rounded-full font-medium"
+                  onClick={refuseCall}
+                >
+                  Refuse
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
