@@ -1,8 +1,8 @@
 import React, { useRef, useState } from "react";
-import { token } from "../../../store/TokenContext";
 import user from "../../../store/accountContext";
-import { MessageDto } from "../ChatBox/ChatBox";
 import socketService from "../../../../socket/Socket";
+import { deleteChat } from "../../../../api/Chat.api";
+import { MessageDto } from "../../../../api/Chat.int";
 
 const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "svg"];
 
@@ -23,13 +23,13 @@ export function InsertMessage({ props }: InsertMessageProps) {
   };
 
   const isDelete = () => {
+    if (msg.id === undefined) {
+      return;
+    }
+    const response = deleteChat(msg.id);
+
     if (window.confirm("Are you sure you want to delete this message?")) {
-      fetch(`http://localhost:8080/chats/delete/${msg.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).then(() => {
+      response.then(() => {
         socketService.emit("delete_message", { otherId: conversationId });
         if (contentRef.current) {
           contentRef.current.innerHTML = "<b>Message has been deleted</b>";
@@ -86,15 +86,16 @@ export function InsertMessage({ props }: InsertMessageProps) {
               </div>
             )}
             <span className="break-words">
-              {content.map((item, index) => {
+              {content.map((item: string | undefined, index: React.Key | null | undefined) => {
                 const isImage =
-                  imageExtensions.some((ext) => item.endsWith("." + ext)) ||
-                  item.startsWith("data:image") ||
-                  (item.startsWith("https://") &&
-                    (item.endsWith(".jpg") ||
-                      item.endsWith(".png") ||
-                      item.endsWith(".jpeg") ||
-                      item.endsWith(".gif")));
+                  typeof item === "string" &&
+                  (imageExtensions.some((ext) => item.endsWith("." + ext)) ||
+                    item.startsWith("data:image") ||
+                    (item.startsWith("https://") &&
+                      (item.endsWith(".jpg") ||
+                        item.endsWith(".png") ||
+                        item.endsWith(".jpeg") ||
+                        item.endsWith(".gif"))));
                 return isImage ? (
                   <a
                     href={item}
@@ -133,14 +134,14 @@ export function InsertMessage({ props }: InsertMessageProps) {
               className={`absolute z-10 ${isMine ? "right-0" : "left-0"
                 } top-full mt-1 bg-white border border-gray-200 rounded shadow-md flex flex-col min-w-[100px]`}
             >
-              {isMine && (
+              {/* {isMine && (
                 <button
                   className="px-4 py-2 text-sm text-red-500 hover:bg-gray-100 rounded-t"
                   onClick={isDelete}
                 >
                   Delete
                 </button>
-              )}
+              )} */}
               <button
                 className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b"
                 onClick={() => setShowDate((prev) => !prev)}

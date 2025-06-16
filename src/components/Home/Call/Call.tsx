@@ -1,18 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
-import {
-  ConversationVm,
-  CallType,
-  CallStatus,
-  ConversationType,
-  CallDto,
-  User,
-  CallResponseDto,
-  MessageType,
-} from "../Chat/ChatBox/ChatBox";
 import socketService from "../../../socket/Socket";
 import user from "../../store/accountContext";
 import { useCall } from "../../../hook/CallContext";
+import { CallDto, CallResponseDto, CallStatus, CallType, MessageType, User } from "../../../api/Chat.int";
 
 interface SignalData {
   signal: any;

@@ -576,7 +576,7 @@ export function Conversation() {
         )}
 
         {/* Change Conversation Image Modal */}
-        {showImageModal && selectedConversationForImage && (
+        {/* {showImageModal && selectedConversationForImage && (
           <div className="absolute z-50 left-1/2 top-1/4 -translate-x-1/2 bg-[#232d36] rounded-lg shadow-lg p-6 w-96 flex flex-col gap-3">
             <h3 className="text-lg font-semibold text-white mb-2">Change Conversation Image</h3>
             <div
@@ -634,7 +634,7 @@ export function Conversation() {
               Close
             </button>
           </div>
-        )}
+        )} */}
 
         {/* Conversation List */}
         <div className="flex-1 flex flex-col overflow-y-auto">
@@ -651,7 +651,8 @@ export function Conversation() {
                 onClick={(e) => handleImageClick(item, e)}
               >
                 <img
-                  src={item.image || "/default-avatar.png"}
+                  // src={item.image || "/user/friend.png"}
+                  src={"/user/friend.png"}
                   alt="avatar"
                   className="w-12 h-12 rounded-full object-cover border border-[#4fbc6b]"
                 />

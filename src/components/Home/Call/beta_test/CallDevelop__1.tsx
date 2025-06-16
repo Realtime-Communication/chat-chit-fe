@@ -2,20 +2,11 @@ import React, { use, useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
 import Draggable from "react-draggable";
 import "./Call.scss";
-import {
-  ConversationVm,
-  CallType,
-  CallStatus,
-  ConversationType,
-  CallDto,
-  User,
-  CallResponseDto,
-  MessageType,
-} from "../../Chat/ChatBox/ChatBox";
 import socketService from "../../../../socket/Socket";
 import user from "../../../store/accountContext";
 import { useCall } from "../../../../hook/CallContext";
 import SimplePeer from "simple-peer";
+import { CallDto, CallResponseDto, CallStatus, CallType, MessageType, User } from "../../../../api/Chat.int";
 interface SignalData {
   signal: any;
 }

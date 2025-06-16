@@ -3,141 +3,21 @@ import React, {
   useState,
   useRef,
 } from "react";
-// Removed: import "./ChatBox.scss";
 import { token } from "../../../store/TokenContext";
 import Success from "../../../Alert/Success";
 import Error from "../../../Alert/ErrorAlert";
 import Emoji from "../../../Emoji/Emoji";
-import user, { Account } from "../../../store/accountContext";
+import user from "../../../store/accountContext";
 import InsertMessage from "../ChatItem/ChatItem";
 import socketService from "../../../../socket/Socket";
 import { useConversation } from "../../../../hook/ConversationContext";
 import { useCall } from "../../../../hook/CallContext";
 import VideoCall from "../../Call/Call";
-
-export enum MessageType {
-  text = "TEXT",
-  image = "IMAGE",
-  file = "FILE",
-  video = "VIDEO",
-  call = "CALL",
-}
-
-export enum CallStatus {
-  INVITED = "INVITED",
-  MISSED = "MISSED",
-  ONGOING = "ONGOING",
-  ENDED = "ENDED",
-}
-
-export enum CallType {
-  voice = "VOICE",
-  video = "VIDEO",
-}
-
-export enum MessageStatus {
-  sent,
-  delivered,
-  read,
-}
-
-export enum ParticipantType {
-  lead,
-  member,
-}
-
-export enum FriendStatus {
-  PENDING,
-  ACCEPTED,
-  REJECTED,
-}
-
-export enum ConversationType {
-  GROUP,
-  FRIEND,
-}
-
-export interface ConversationParticipant {
-  id: number;
-  userId: number;
-  type: ParticipantType;
-  createdAt: Date;
-  user: User;
-}
-
-export interface ConversationVm {
-  id: number;
-  title: string;
-  creatorId: number;
-  channelId: number;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt?: Date;
-  type: ConversationType;
-  participants?: ConversationParticipant[];
-}
-
-// Message response types
-export interface User {
-  id: number;
-  sid: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  avatarUrl: string;
-  isActive: boolean;
-}
-
-export interface Attachment {
-  thumbUrl: string;
-  fileUrl: string;
-}
-
-export interface MessageResponse {
-  statusCode: number;
-  message: string;
-  data: {
-    page: number;
-    result: MessageDto[];
-    size: number;
-    totalPage: number;
-    totalElement: number;
-  };
-}
-
-export interface MessageDto {
-  id?: number;
-  conversationId: number | undefined;
-  guid?: number;
-  conversationType?: ConversationType;
-  messageType: MessageType;
-  content: string;
-  callType?: CallType;
-  callStatus?: CallStatus;
-  status?: MessageStatus; // You can default this in your implementation logic
-  timestamp?: Date;
-  attachments?: Attachment[];
-  user?: Account;
-}
-
-export interface CallDto extends Partial<MessageDto> {
-  callerInfomation?: Account;
-  signal: string;
-  conversation?: ConversationVm;
-}
-
-export interface CallResponseDto extends Partial<MessageDto> {
-  signal: string;
-  callerInfomation: Account;
-  conversation: ConversationVm;
-}
-
-interface OtherInfo {
-  name: string;
-  image: string;
-  type: ConversationType;
-  participants?: ConversationParticipant[];
-}
+import {
+  CallDto, CallResponseDto, ConversationType, ConversationVm,
+  MessageDto, MessageResponse, MessageType, OtherInfo
+} from "../../../../api/Chat.int";
+import { getChatByConversationId, getConversationById } from "../../../../api/Chat.api";
 
 // Function to get other info from conversation
 const getOtherInfo = (
@@ -232,12 +112,8 @@ export function ChatBox() {
 
   useEffect(() => {
     if (conversationId && conversationId !== -1) {
-      fetch(`http://localhost:8080/conversations/${conversationId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const respone = getConversationById(conversationId);
+      respone
         .then((res) => res.json())
         .then((data) => {
           setConversationInfo(data.data);
@@ -270,15 +146,8 @@ export function ChatBox() {
   }, [currentHeightOfChats]);
 
   const fetchChat = () => {
-    fetch(
-      `http://localhost:8080/conversations/${conversationId}/message?page=1&size=${chatLimit}&order=desc`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    const respone = getChatByConversationId(conversationId ?? -1, chatLimit);
+    respone
       .then((res) => res.json())
       .then((data: MessageResponse) => {
         if (data.data) {
@@ -469,10 +338,11 @@ export function ChatBox() {
           </button>
           <img
             className="w-12 h-12 rounded-full object-cover border border-[#4fbc6b]"
-            src={
-              otherInfo.image ||
-              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s"
-            }
+            // src={
+            //   otherInfo.image ||
+            //   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s"
+            // }
+            src={"/user/friend.png"}
             alt="avatar"
           />
           <div className="flex flex-col">
@@ -504,7 +374,7 @@ export function ChatBox() {
             <span className="text-black text-sm">You</span>
             <img
               className="w-10 h-10 rounded-full object-cover border border-[#4fbc6b]"
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqTVkhCTegQ52T8whAahZj7gNfvJOywWFlOg&s"
+              src="/user/friend.png"
               alt="me"
             />
           </div>

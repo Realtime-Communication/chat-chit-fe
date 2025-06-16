@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { token } from "../components/store/TokenContext";
-import { ConversationVm } from "../components/Home/Chat/ChatBox/ChatBox";
+import React, { createContext, useContext, useState} from "react";
+import { ConversationVm } from "../api/Chat.int";
 
 const CallContext = createContext<{
   conversation: ConversationVm | undefined;

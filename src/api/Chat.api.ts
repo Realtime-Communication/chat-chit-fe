@@ -48,7 +48,7 @@ export const uploadImage = async (formData: FormData, id: number) => {
 
 export const updateImageUrl = async (body: Record<string, any>, id: number) => {
   const response = await fetch(
-    `${process.env.REACT_APP_API}/conversations/${id}/avatar`,
+    `http://localhost:8080/conversations/${id}/avatar`,
     {
       method: "PUT",
       headers: {
@@ -64,3 +64,50 @@ export const updateImageUrl = async (body: Record<string, any>, id: number) => {
   return response.json();
 }
 
+export const deleteChat = async (id: number) => {
+  const response = await fetch(
+    `http://localhost:8080/chats/delete/${id}`, 
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!response.ok) {
+    throw new Error("Failed to delete chat");
+  }
+  return response;
+}
+
+export const getConversationById = async (id: number) => {
+  const response = await fetch(
+    `http://localhost:8080/conversations/${id}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch conversation by ID");
+  }
+  return response;
+};
+
+export const getChatByConversationId = async (conversationId: number, chatLimit: number) => {
+  const response = await fetch (
+    `http://localhost:8080/conversations/${conversationId}/message?page=1&size=${chatLimit}&order=desc`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+  if (!response.ok) {
+    throw new Error("Failed to fetch chat by conversation ID");
+  }
+  return response;
+};
