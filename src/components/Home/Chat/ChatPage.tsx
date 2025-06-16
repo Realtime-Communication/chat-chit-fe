@@ -6,40 +6,36 @@ import { CallProvider } from "../../../hook/CallContext";
 
 export function Chat() {
   const {
-    conversationId,
-    setConversationId,
     isShowRecent,
     setIsShowRecent,
   } = useConversation();
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 500);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 640);
 
-  // Cập nhật khi thay đổi kích thước cửa sổ
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 500);
+      setIsMobile(window.innerWidth <= 640);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
-      {/* Sidebar hội thoại */}
+    <div className="flex h-[calc(100vh-64px)] bg-gray-100 gap-1">
+      {/* Sidebar (Conversation List) */}
       <div
-        className={`transition-all duration-300 ${
-          isMobile
+        className={`transition-all duration-300 bg-white ${isMobile
             ? isShowRecent
-              ? "w-full"
+              ? "w-full absolute z-20 left-0 top-0 h-full shadow-lg"
               : "hidden"
-            : "w-[30%] border-r border-gray-300"
-        }`}
+            : "w-[350px] border-r border-gray-200"
+          }`}
       >
         <div className="h-full relative">
           <Conversation />
           {isMobile && isShowRecent && (
             <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+              className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl"
               onClick={() => setIsShowRecent(false)}
               title="Close"
             >
@@ -49,15 +45,14 @@ export function Chat() {
         </div>
       </div>
 
-      {/* Hộp thoại chat */}
+      {/* Main Chat Area */}
       <div
-        className={`transition-all duration-300 flex-1 ${
-          isMobile
+        className={`transition-all duration-300 flex-1 flex flex-col rounded ${isMobile
             ? isShowRecent
               ? "hidden"
               : "w-full"
-            : "w-[70%]"
-        }`}
+            : ""
+          }`}
       >
         <CallProvider>
           <ChatBox />

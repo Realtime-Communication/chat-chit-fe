@@ -6,7 +6,7 @@ import React, {
   MouseEvent,
   DragEvent,
 } from "react";
-import "./Conversation.scss";
+// Removed: import "./Conversation.scss";
 import { token } from "../../../store/TokenContext";
 import AddParticipant from "./AddParticipant";
 import user from "../../../store/accountContext";
@@ -87,9 +87,7 @@ export function Conversation() {
       ? `${lastMsg.user?.firstName || "User"}: ${lastMsg.content}`
       : "";
 
-    // For conversations with 2 participants, show the other person's name
     if (item.conversationType === ConversationType.FRIEND) {
-      // Find the other participant (not the current user)
       const otherParticipant = item.participants.find(
         (p: any) => p.userId !== user.id
       );
@@ -106,9 +104,7 @@ export function Conversation() {
         conversationType: item.conversationType,
         participants: item.participants,
       };
-    }
-    // For group conversations, use the conversation title
-    else {
+    } else {
       return {
         id: item.id,
         name: item.title,
@@ -132,7 +128,6 @@ export function Conversation() {
           (a: any, b: any) =>
             new Date(b.msgTime).getTime() - new Date(a.msgTime).getTime()
         );
-      console.log(formatted);
       setConversationId(formatted.at(0)?.id);
       setConversationRecent(formatted);
     } catch (err) {
@@ -165,7 +160,7 @@ export function Conversation() {
 
   const handleAddFriend = async () => {
     try {
-      const response = await addFriend({email});
+      const response = await addFriend({ email });
 
       if (response.ok) {
         const data = await response.json();
@@ -219,13 +214,10 @@ export function Conversation() {
       );
       const data: FriendRequestApiResponse = await response.json();
       if (data.statusCode === 200) {
-        // Extract friends from the friend requests
         const friends: Friend[] = data.data.result.map((request) => {
-          // If current user is requester, return receiver as friend
           if (request.requesterId === user.id) {
             return request.receiver;
           }
-          // If current user is receiver, return requester as friend
           return request.requester;
         });
         setFriends(friends);
@@ -414,7 +406,6 @@ export function Conversation() {
       const data = await response.json();
       if (data.statusCode === 200) {
         setImageUrl(data.data.avatarUrl);
-        // Update the conversation in the list
         setConversationRecent((prev) =>
           prev.map((conv) =>
             conv.id === selectedConversationForImage?.id
@@ -452,7 +443,6 @@ export function Conversation() {
 
       const data = await response.json();
       if (data.statusCode === 200) {
-        // Update the conversation in the list
         setConversationRecent((prev) =>
           prev.map((conv) =>
             conv.id === selectedConversationForImage?.id
@@ -472,54 +462,82 @@ export function Conversation() {
 
   return (
     <>
-      <div className="chat-recent" ref={itemRef}>
-        <div className="friend-actions">
-          <button
-            className="add-friend-btn"
-            onClick={() => setShowAddFriend(!showAddFriend)}
-          >
-            Add Friend
-          </button>
-          <button
-            className="create-conversation-btn"
-            onClick={() => setShowCreateConversation(!showCreateConversation)}
-          >
-            Create Conversation
-          </button>
-          <button
-            className="friend-requests-btn"
-            onClick={() => setShowFriendRequests(!showFriendRequests)}
-          >
-            Friend Requests{" "}
-            {pendingRequests.length > 0 && `(${pendingRequests.length})`}
-          </button>
+      <div
+        className="w-full h-full bg-gray-100 flex flex-col border-r border-gray-100 max-w-[380px] min-w-[320px] 
+        overflow-y-auto border rounded"
+        ref={itemRef}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-[#0088cc] gap-3">
+          <span className="text-lg font-semibold text-white">Chats</span>
+          <div className="flex">
+            <button
+              className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-full py-1 text-sm font-medium"
+              onClick={() => setShowAddFriend(!showAddFriend)}
+            >
+              Add Friend
+            </button>
+            <button
+              className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-full py-1 text-sm font-medium"
+              onClick={() => setShowCreateConversation(!showCreateConversation)}
+            >
+              New Conversation
+            </button>
+            <button
+              className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-full py-1 text-sm font-medium"
+              onClick={() => setShowFriendRequests(!showFriendRequests)}
+            >
+              Friend Requests
+              {pendingRequests.length > 0 && (
+                <span className="ml-1 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
+        {/* Add Friend Modal */}
         {showAddFriend && (
-          <div className="add-friend-modal">
+          <div className="absolute z-50 left-1/2 top-1/4 -translate-x-1/2 bg-[#232d36] rounded-lg shadow-lg p-6 w-80 flex flex-col gap-3">
             <input
               type="email"
               placeholder="Enter email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="rounded px-3 py-2 bg-[#2a3942] text-white border border-[#4fbc6b] focus:outline-none"
             />
-            <button onClick={handleAddFriend}>Send Request</button>
-            <button onClick={() => setShowAddFriend(false)}>Cancel</button>
+            <div className="flex gap-2">
+              <button
+                className="flex-1 bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded px-3 py-2"
+                onClick={handleAddFriend}
+              >
+                Send Request
+              </button>
+              <button
+                className="flex-1 bg-[#232d36] hover:bg-[#2a3942] text-white rounded px-3 py-2 border border-[#4fbc6b]"
+                onClick={() => setShowAddFriend(false)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 
+        {/* Create Conversation Modal */}
         {showCreateConversation && (
-          <div className="create-conversation-modal">
-            <h3>Create New Conversation</h3>
+          <div className="absolute z-50 left-1/2 top-1/4 -translate-x-1/2 bg-[#232d36] rounded-lg shadow-lg p-6 w-96 flex flex-col gap-3">
+            <h3 className="text-lg font-semibold text-white mb-2">Create New Conversation</h3>
             <input
               type="text"
               placeholder="Enter conversation title"
               value={conversationTitle}
               onChange={(e) => setConversationTitle(e.target.value)}
+              className="rounded px-3 py-2 bg-[#2a3942] text-white border border-[#4fbc6b] focus:outline-none"
             />
             {!showFriendSelection ? (
               <button
-                className="select-friends-btn"
+                className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded px-3 py-2"
                 onClick={() => {
                   setShowFriendSelection(true);
                   fetchFriends();
@@ -528,38 +546,36 @@ export function Conversation() {
                 Select Friends
               </button>
             ) : (
-              <div className="friends-selection">
-                <h4>Select Friends</h4>
-                <div className="friends-list">
+              <div>
+                <h4 className="text-white font-medium mb-1">Select Friends</h4>
+                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto mb-2">
                   {friends.map((friend) => (
                     <div
                       key={friend.id}
-                      className={`friend-item ${selectedFriends.some((f) => f.id === friend.id)
-                        ? "selected"
-                        : ""
+                      className={`cursor-pointer px-2 py-1 rounded-full border text-sm ${selectedFriends.some((f) => f.id === friend.id)
+                        ? "bg-[#4fbc6b] text-white border-[#4fbc6b]"
+                        : "bg-[#2a3942] text-white border-[#4fbc6b] hover:bg-[#4fbc6b] hover:text-white"
                         }`}
                       onClick={() => toggleFriendSelection(friend)}
                     >
-                      <span className="name">
-                        {friend.firstName} {friend.lastName}
-                      </span>
-                      <span className="email">{friend.email}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="selected-friends">
-                  <h4>Selected Friends ({selectedFriends.length})</h4>
-                  {selectedFriends.map((friend) => (
-                    <div key={friend.id} className="selected-friend">
                       {friend.firstName} {friend.lastName}
                     </div>
                   ))}
                 </div>
+                <div className="text-xs text-gray-300 mb-2">
+                  Selected: {selectedFriends.length}
+                </div>
               </div>
             )}
-            <div className="modal-actions">
-              <button onClick={handleCreateConversation}>Create</button>
+            <div className="flex gap-2">
               <button
+                className="flex-1 bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded px-3 py-2"
+                onClick={handleCreateConversation}
+              >
+                Create
+              </button>
+              <button
+                className="flex-1 bg-[#232d36] hover:bg-[#2a3942] text-white rounded px-3 py-2 border border-[#4fbc6b]"
                 onClick={() => {
                   setShowCreateConversation(false);
                   setShowFriendSelection(false);
@@ -573,149 +589,159 @@ export function Conversation() {
           </div>
         )}
 
-        {showAddParticipant && selectedConversation && (
-          <AddParticipant
-            conversationId={selectedConversation.id}
-            onParticipantAdded={handleParticipantAdded}
-            onClose={() => {
-              setShowAddParticipant(false);
-              setSelectedConversation(null);
-            }}
-          />
-        )}
-
+        {/* Friend Requests Modal */}
         {showFriendRequests && (
-          <div className="friend-requests-list">
-            {pendingRequests.map((request) => (
-              <div key={request.id} className="friend-request-item">
-                <div className="request-info">
-                  <span className="name">
-                    {request.requester.firstName} {request.requester.lastName}
-                  </span>
-                  <span className="email">{request.requester.email}</span>
+          <div className="absolute z-50 left-1/2 top-1/4 -translate-x-1/2 bg-[#232d36] rounded-lg shadow-lg p-6 w-96 flex flex-col gap-3">
+            <h3 className="text-lg font-semibold text-white mb-2">Friend Requests</h3>
+            <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+              {pendingRequests.length === 0 && (
+                <div className="text-gray-400 text-center">No pending friend requests</div>
+              )}
+              {pendingRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between bg-[#2a3942] rounded px-3 py-2">
+                  <div>
+                    <div className="text-white font-medium">
+                      {request.requester.firstName} {request.requester.lastName}
+                    </div>
+                    <div className="text-xs text-gray-400">{request.requester.email}</div>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded px-2 py-1 text-xs"
+                      onClick={() => handleFriendRequest(request.id, true)}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="bg-[#232d36] hover:bg-[#2a3942] text-white rounded px-2 py-1 text-xs border border-[#4fbc6b]"
+                      onClick={() => handleFriendRequest(request.id, false)}
+                    >
+                      Decline
+                    </button>
+                  </div>
                 </div>
-                <div className="request-actions">
-                  <button onClick={() => handleFriendRequest(request.id, true)}>
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleFriendRequest(request.id, false)}
-                  >
-                    Decline
-                  </button>
-                </div>
-              </div>
-            ))}
-            {pendingRequests.length === 0 && (
-              <div className="no-requests">No pending friend requests</div>
-            )}
+              ))}
+            </div>
+            <button
+              className="bg-[#232d36] hover:bg-[#2a3942] text-white rounded px-3 py-2 border border-[#4fbc6b] mt-2"
+              onClick={() => setShowFriendRequests(false)}
+            >
+              Close
+            </button>
           </div>
         )}
 
+        {/* Change Conversation Image Modal */}
         {showImageModal && selectedConversationForImage && (
-          <div className="image-modal">
-            <div className="modal-content">
-              <h3>Change Conversation Image</h3>
-
-              <div className="image-upload-section">
-                <div
-                  className={`drop-zone ${isDragging ? "dragging" : ""}`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileInput}
-                    accept="image/*"
-                    style={{ display: "none" }}
-                  />
-                  <p>Drag and drop an image here or click to select</p>
-                  {selectedConversationForImage.image && (
-                    <img
-                      src={selectedConversationForImage.image}
-                      alt="Current conversation"
-                      className="preview-image"
-                    />
-                  )}
-                </div>
-
-                <div className="url-input-section">
-                  <p>Or enter image URL:</p>
-                  <input
-                    type="text"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="Enter image URL"
-                  />
-                  <button onClick={handleUrlSubmit}>Update URL</button>
-                </div>
-
-                {uploadError && <p className="error-message">{uploadError}</p>}
-              </div>
-
-              <div className="modal-actions">
+          <div className="absolute z-50 left-1/2 top-1/4 -translate-x-1/2 bg-[#232d36] rounded-lg shadow-lg p-6 w-96 flex flex-col gap-3">
+            <h3 className="text-lg font-semibold text-white mb-2">Change Conversation Image</h3>
+            <div
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-4 cursor-pointer ${isDragging ? "border-[#4fbc6b] bg-[#2a3942]" : "border-[#4fbc6b]"
+                }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileInput}
+                accept="image/*"
+                style={{ display: "none" }}
+              />
+              <p className="text-gray-300 text-sm mb-2">Drag and drop an image here or click to select</p>
+              {selectedConversationForImage.image && (
+                <img
+                  src={selectedConversationForImage.image}
+                  alt="Current conversation"
+                  className="w-16 h-16 rounded-full object-cover border border-[#4fbc6b] mb-2"
+                />
+              )}
+            </div>
+            <div>
+              <p className="text-gray-300 text-xs mb-1">Or enter image URL:</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="Enter image URL"
+                  className="flex-1 rounded px-3 py-2 bg-[#2a3942] text-white border border-[#4fbc6b] focus:outline-none"
+                />
                 <button
-                  onClick={() => {
-                    setShowImageModal(false);
-                    setSelectedConversationForImage(null);
-                    setImageUrl("");
-                    setUploadError("");
-                  }}
+                  className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded px-3 py-2"
+                  onClick={handleUrlSubmit}
                 >
-                  Close
+                  Update
                 </button>
               </div>
             </div>
+            {uploadError && <p className="text-red-400 text-xs">{uploadError}</p>}
+            <button
+              className="bg-[#232d36] hover:bg-[#2a3942] text-white rounded px-3 py-2 border border-[#4fbc6b] mt-2"
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedConversationForImage(null);
+                setImageUrl("");
+                setUploadError("");
+              }}
+            >
+              Close
+            </button>
           </div>
         )}
 
-        {/* <div
-          className="recent-item current-recent example"
-          onClick={handleClick}
-          data-id="-1"
-          key="-1"
-        >
-          <div className="item-wrap" />
-        </div> */}
-
-        {conversationRecent.map((item) => (
-          <div
-            className="recent-item"
-            onClick={handleClick}
-            data-id={item.id}
-            key={item.id}
-          >
-            <div className="avatar" onClick={(e) => handleImageClick(item, e)}>
-              <img src={item.image || "/default-avatar.png"} alt="avatar" />
-            </div>
-            {listOnline.includes(item.id) ? (
+        {/* Conversation List */}
+        <div className="flex-1 flex flex-col overflow-y-auto">
+          {conversationRecent.map((item) => (
+            <div
+              className={`flex items-center gap-3 px-6 py-3 cursor-pointer hover:bg-[#232d36] transition ${conversationId === item.id ? "bg-[#232d36]" : ""
+                }`}
+              onClick={handleClick}
+              data-id={item.id}
+              key={item.id}
+            >
               <div
-                className={
-                  userTyping.includes(item.id)
-                    ? "chat-status-online typing"
-                    : "chat-status-online"
-                }
-              />
-            ) : (
-              <div className="chat-status-offline" />
-            )}
-            <div className="item-wrap">
-              <div className="chat-wrap">
-                <div className="chat-name">{item.name}</div>
-              </div>
-              <div className="chat-content">
-                {userTyping.includes(item.id) ? (
-                  <i>This user is typing...</i>
+                className="relative"
+                onClick={(e) => handleImageClick(item, e)}
+              >
+                <img
+                  src={item.image || "/default-avatar.png"}
+                  alt="avatar"
+                  className="w-12 h-12 rounded-full object-cover border border-[#4fbc6b]"
+                />
+                {listOnline.includes(item.id) ? (
+                  <span
+                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#232d36] ${userTyping.includes(item.id)
+                      ? "bg-yellow-400 animate-pulse"
+                      : "bg-[#4fbc6b]"
+                      }`}
+                  />
                 ) : (
-                  <i>{item.content}</i>
+                  <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#232d36] bg-gray-400" />
                 )}
               </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-white font-medium truncate">{item.name}</span>
+                  <span className="text-xs text-gray-400 ml-2">
+                    {item.msgTime
+                      ? new Date(item.msgTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                      : ""}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-400 truncate">
+                  {userTyping.includes(item.id) ? (
+                    <span className="italic text-[#4fbc6b]">Typing...</span>
+                  ) : (
+                    <span className="italic">{item.content}</span>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </>
   );

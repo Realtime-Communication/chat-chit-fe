@@ -1,11 +1,9 @@
 import React, {
-  useContext,
   useEffect,
   useState,
-  createContext,
   useRef,
 } from "react";
-import "./ChatBox.scss";
+// Removed: import "./ChatBox.scss";
 import { token } from "../../../store/TokenContext";
 import Success from "../../../Alert/Success";
 import Error from "../../../Alert/ErrorAlert";
@@ -14,7 +12,7 @@ import user, { Account } from "../../../store/accountContext";
 import InsertMessage from "../ChatItem/ChatItem";
 import socketService from "../../../../socket/Socket";
 import { useConversation } from "../../../../hook/ConversationContext";
-import { CallProvider, useCall } from "../../../../hook/CallContext";
+import { useCall } from "../../../../hook/CallContext";
 import VideoCall from "../../Call/Call";
 
 export enum MessageType {
@@ -222,17 +220,6 @@ export function ChatBox() {
   >(undefined);
   const [coop, setCoop] = useState<string>("");
 
-  // Update conversation when isLoad changes
-  // useEffect(() => {
-  //   if (conversationIdTransfer) {
-  //     setConversationId(conversationIdTransfer);
-  //     setAutoScroll(true);
-  //     setChatLimit(15);
-  //     if (inputRef.current) {
-  //       inputRef.current.focus();
-  //     }
-  //   }
-  // }, [conversationIdTransfer]);
   useEffect(() => {
     if (conversationId) {
       setAutoScroll(true);
@@ -243,7 +230,6 @@ export function ChatBox() {
     }
   }, [conversationId]);
 
-  // Fetch conversation info
   useEffect(() => {
     if (conversationId && conversationId !== -1) {
       fetch(`http://localhost:8080/conversations/${conversationId}`, {
@@ -260,7 +246,6 @@ export function ChatBox() {
     }
   }, [conversationId]);
 
-  // Update other info when conversation changes
   useEffect(() => {
     if (conversationInfo) {
       setOtherInfo(getOtherInfo(conversationInfo, user.id));
@@ -277,7 +262,6 @@ export function ChatBox() {
     }
   }, []);
 
-  // Keep old position before fetch
   useEffect(() => {
     if (messagesRef.current && currentHeightOfChats !== undefined) {
       messagesRef.current.scrollTop =
@@ -285,21 +269,6 @@ export function ChatBox() {
     }
   }, [currentHeightOfChats]);
 
-  // useEffect(() => {
-  //   fetch(`http://localhost:8080/conversations/${conversationId}/messages`, {
-  //     method: "GET",
-  //     headers: {
-  //       Authorization: `Bearer ${token}`,
-  //     },
-  //   })
-  //     .then((res) => res.json())
-  //     .then((data: { data: { _id: string }[] }) => {
-  //       const result = data.data.map((item) => item._id);
-  //       setMyGroups(result);
-  //     });
-  // }, []);
-
-  // Get message recent with other friend now
   const fetchChat = () => {
     fetch(
       `http://localhost:8080/conversations/${conversationId}/message?page=1&size=${chatLimit}&order=desc`,
@@ -314,8 +283,6 @@ export function ChatBox() {
       .then((data: MessageResponse) => {
         if (data.data) {
           setChatsFriendRecent(data.data.result || []);
-          // setOtherName(data.data.otherName);
-          // setOtherImage(data.data.otherImage);
         }
         const messages = document.querySelector(
           "#messages"
@@ -329,13 +296,11 @@ export function ChatBox() {
   };
 
   useEffect(() => {
-    console.log(conversationId);
     if (!conversationId) {
       setChatsFriendRecent([]);
     } else fetchChat();
   }, [conversationId]);
 
-  // Render message recent with other friend now
   useEffect(() => {
     const old: JSX.Element[] = [];
     chatsFriendRecent.forEach((msg) => {
@@ -344,7 +309,6 @@ export function ChatBox() {
     setMessageRecent(old);
   }, [chatsFriendRecent]);
 
-  // SEND message to server
   function onSubmit(
     event:
       | React.MouseEvent<HTMLButtonElement>
@@ -373,7 +337,6 @@ export function ChatBox() {
     }
   }
 
-  // Scroll top extra and get message previous
   const overScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.target as HTMLDivElement;
     if (target.scrollTop === 0) {
@@ -388,30 +351,24 @@ export function ChatBox() {
     }
   };
 
-  // User is typing
   const typing = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     socketService.emit("typing", { otherId: conversationId });
   };
 
   const handleComingMessage = (msg: any) => {
-    const tmp = user;
-    console.log("xxxxxxxxxxxx " + tmp);
     if (msg.conversationId == conversationId) {
-      console.log("HERE 1");
       setMessageRecent((prev) => [
         ...prev,
         <InsertMessage props={[msg, conversationId]} />,
       ]);
       return;
     } else {
-      console.log("HERE 2");
       setAlertTag(
         <Success
           value={[
-            `${
-              msg.conversationType === ConversationType.GROUP
-                ? "Group message from: " + msg.user?.lastName + ": "
-                : ""
+            `${msg.conversationType === ConversationType.GROUP
+              ? "Group message from: " + msg.user?.lastName + ": "
+              : ""
             } ${msg.user?.lastName}`,
             [msg.content],
           ]}
@@ -421,22 +378,12 @@ export function ChatBox() {
     }
   };
 
-  useEffect(() => {}, []);
-
-  // useEffect(() => {
-  //   socketService.listen("listOnline", (data: { listOnline: number[] }) => {
-  //     setListOnline(data.listOnline);
-  //   });
-  // }, [socket]);
-
-  // RENDER incoming message realtime
   useEffect(() => {
     socketService.listen("messageComing", handleComingMessage);
     return () =>
       socketService.offListener("messageComing", handleComingMessage);
   }, [conversationId, messageRecent]);
 
-  // Scroll to bottom
   useEffect(() => {
     const messages = document.querySelector(
       "#messages"
@@ -444,25 +391,10 @@ export function ChatBox() {
     if (autoScroll && messages) messages.scrollTop = messages.scrollHeight;
   }, [messageRecent]);
 
-  // Check Profile
   const checkProfile = (e: React.MouseEvent<HTMLDivElement>) => {
-    console.log("checkProfile");
+    // Profile logic
   };
 
-  // SECTION OF CALLING
-  // const goCall = (e: React.MouseEvent<HTMLImageElement>) => {
-  //   if (isCall === "none") {
-  //     setCoop("You calling to " + otherName);
-  //     setOption(conversationId);
-  //     setIsCall("flex");
-  //   } else {
-  //     window.alert(
-  //       "To CALL/ANSWER doubleClick on `your` screen! \nTo STOP doubleClick on `other` screen \nOr You Can Click Button On Screen !"
-  //     );
-  //   }
-  // };
-
-  // Receiver call
   useEffect(() => {
     socketService.listen("userNotOnline", () => {
       setAlertTag(
@@ -488,15 +420,12 @@ export function ChatBox() {
     socketService.listen("refuseCall", () => {
       setCoop("");
       setIsCall("none");
-      console.log("refuse");
       setConversation(undefined);
     });
 
     socketService.listen("completeCloseCall", () => {
-      console.log("complete_close_call");
       setCoop("");
       setConversation(undefined);
-
       setIsCall("none");
     });
 
@@ -515,8 +444,7 @@ export function ChatBox() {
     };
   }, []);
 
-  // Sending call
-  const goCall = (e: React.MouseEvent<HTMLImageElement>) => {
+  const goCall = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (isCall === "none") {
       setConversation(conversationInfo);
       setCoop(`You calling to ${otherInfo.name}`);
@@ -529,112 +457,145 @@ export function ChatBox() {
   };
 
   return (
-    <>
-      <div>Channel ID = {conversationId}</div>
-
-      {alertTag}
-      <div className="header-bar">
-        <div
-          className="show_recent"
-          onClick={() => setIsShowRecent(!isShowRecent)}
-        >
-          X
-        </div>
-        <div className="profile">
-          <img
-            className="avatar"
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s"
-          />
-          <div className="user-profile" onClick={checkProfile}>
-            <b>{otherInfo ? otherInfo.name : "All"}</b>
-          </div>
-        </div>
-        <div className="call-icon">
-          <img
-            onClick={goCall}
-            src={
-              isCall == "none"
-                ? "https://cdn-icons-png.flaticon.com/128/901/901141.png"
-                : "https://cdn-icons-png.flaticon.com/128/9999/9999340.png"
-            }
-          />
-          <div className="coop">{coop} </div>
-        </div>
-        <div className="profile">
-          <div className="user-profile" onClick={checkProfile}>
-            {" "}
-            Watashi <b>{user.lastName}</b>
-          </div>
-          <img
-            className="avatar"
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqTVkhCTegQ52T8whAahZj7gNfvJOywWFlOg&s"
-          />
-        </div>
-      </div>
-      <div className="view-profile"></div>
-      <div className="messages" id="messages" onScroll={overScroll}>
-        <div className={"announ"}>
-          {showLoad ? (
-            <div className="load">Load message previous</div>
-          ) : (
-            <div></div>
-          )}
-        </div>
-        {(messageRecent || []).map((item, index) => {
-          return <>{item}</>;
-        })}
-      </div>
-      <div className="video-call" style={{ display: isCall }}>
-        {/* {resetCall && option ? ( */}
-        {callWindow}
-        {/* ) : null} */}
-      </div>
-      <div className="chat-message">
-        <form id="form" className="form_chat" action="">
-          <textarea
-            ref={inputRef}
-            onInput={typing}
-            onClick={() => {
-              setIsEmoji(false);
-              inputRef?.current?.focus();
-              if (inputRef.current)
-                inputRef.current.scrollTop = inputRef.current.scrollHeight;
-            }}
-            onKeyDown={(e) =>
-              e.key === "Enter" && !e.shiftKey
-                ? submitRef?.current?.click()
-                : ""
-            }
-            className="form_input"
-            placeholder=" Kimi no nawa ? "
-            id="input"
-            autoComplete="on"
-          />
-          <div
-            onClick={() => {
-              setIsEmoji(!isEmoji);
-              if (inputRef.current) {
-                inputRef.current.focus();
-                inputRef.current.scrollTop = inputRef.current.scrollHeight;
-              }
-            }}
-            className="emoji_icon"
+    <div className="flex flex-col h-full w-full bg-gray-100 border rounded">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border border-gray-200 bg-[#0088cc]">
+        <div className="flex items-center gap-3">
+          <button
+            className="md:hidden text-black text-xl"
+            onClick={() => setIsShowRecent(!isShowRecent)}
           >
-            {isEmoji ? "🥰" : "😉"}
+            <span className="material-icons">menu</span>
+          </button>
+          <img
+            className="w-12 h-12 rounded-full object-cover border border-[#4fbc6b]"
+            src={
+              otherInfo.image ||
+              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s"
+            }
+            alt="avatar"
+          />
+          <div className="flex flex-col">
+            <span className="text-black font-semibold text-lg">
+              {otherInfo ? otherInfo.name : "All"}
+            </span>
+            {coop && (
+              <span className="text-xs text-[#4fbc6b]">{coop}</span>
+            )}
           </div>
-          {isEmoji ? (
-            <div className="emoji">
-              <Emoji value={inputRef} />
-            </div>
-          ) : (
-            <div></div>
-          )}
-          <button ref={submitRef} className="form_submit" onClick={onSubmit}>
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            className="p-2 rounded-full bg-[#4fbc6b] hover:bg-[#43a85c] transition"
+            onClick={goCall}
+            title="Call"
+          >
+            <img
+              className="w-6 h-6"
+              src={
+                isCall == "none"
+                  ? "https://cdn-icons-png.flaticon.com/128/901/901141.png"
+                  : "https://cdn-icons-png.flaticon.com/128/9999/9999340.png"
+              }
+              alt="call"
+            />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-black text-sm">You</span>
+            <img
+              className="w-10 h-10 rounded-full object-cover border border-[#4fbc6b]"
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqTVkhCTegQ52T8whAahZj7gNfvJOywWFlOg&s"
+              alt="me"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Alerts */}
+      {alertTag && <div className="px-6 pt-2">{alertTag}</div>}
+
+      {/* Messages */}
+      <div
+        className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-gray-50"
+        id="messages"
+        onScroll={overScroll}
+      >
+        {showLoad && (
+          <div className="flex justify-center mb-2">
+            <span className="text-xs text-gray-400">Loading previous messages...</span>
+          </div>
+        )}
+        {(messageRecent || []).map((item, index) => (
+          <React.Fragment key={index}>{item}</React.Fragment>
+        ))}
+      </div>
+
+      {/* Video Call */}
+      <div className="fixed inset-0 z-50" style={{ display: isCall }}>
+        {callWindow}
+      </div>
+
+      {/* Chat Input */}
+      <div className="px-6 py-4 border-t border-gray-200 bg-white rounded">
+        <form
+          id="form"
+          className="flex items-end gap-2"
+          onSubmit={onSubmit}
+          autoComplete="off"
+        >
+          <div className="relative flex-1">
+            <textarea
+              ref={inputRef}
+              onInput={typing}
+              onClick={() => {
+                setIsEmoji(false);
+                inputRef?.current?.focus();
+                if (inputRef.current)
+                  inputRef.current.scrollTop = inputRef.current.scrollHeight;
+              }}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !e.shiftKey
+                  ? submitRef?.current?.click()
+                  : undefined
+              }
+              className="w-full resize-none rounded-2xl px-4 py-3 bg-gray-100 text-black border border-[#4fbc6b] focus:outline-none"
+              placeholder="Type a message..."
+              id="input"
+              rows={1}
+              autoComplete="on"
+              style={{ minHeight: "44px", maxHeight: "120px" }}
+            />
+            <button
+              type="button"
+              className="absolute right-2 bottom-2 text-xl"
+              onClick={() => {
+                setIsEmoji(!isEmoji);
+                if (inputRef.current) {
+                  inputRef.current.focus();
+                  inputRef.current.scrollTop = inputRef.current.scrollHeight;
+                }
+              }}
+              tabIndex={-1}
+            >
+              <span>{isEmoji ? "🥰" : "😉"}</span>
+            </button>
+            {isEmoji && (
+              <div className="absolute left-0 bottom-12 z-10">
+                <Emoji value={inputRef} />
+              </div>
+            )}
+          </div>
+          <button
+            ref={submitRef}
+            className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-full px-6 py-2 font-semibold transition"
+            onClick={onSubmit}
+            type="submit"
+          >
             Send
           </button>
         </form>
       </div>
-    </>
+    </div>
   );
 }
 

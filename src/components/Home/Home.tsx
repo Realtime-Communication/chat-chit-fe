@@ -26,27 +26,35 @@ function Home(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-[#E6F0F3]">
+    <div className="min-h-screen bg-[#f7f8fa]">
       {/* Header */}
-      <header className="flex justify-between items-center px-6 py-4 bg-[#0088cc] text-white shadow-md">
-        <h1 className="text-xl font-semibold">Chat Chit</h1>
-        <div className="flex gap-4">
+      <header className="flex justify-between items-center px-8 py-4 bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex items-center gap-3">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
+            alt="Logo"
+            className="w-8 h-8"
+          />
+          <h1 className="text-2xl font-bold text-[#0088cc] tracking-tight">
+            Chat Chit
+          </h1>
+        </div>
+        <div className="flex gap-2">
           {tabs.map((tab, index) => (
             <button
               key={index}
               onClick={() => setNum(index)}
-              className={`px-4 py-2 rounded-md font-medium transition duration-200 ${
-                num === index
-                  ? "bg-white text-[#0088cc]"
-                  : "hover:bg-white/20"
-              }`}
+              className={`px-5 py-2 rounded-full font-medium transition duration-200 text-base ${num === index
+                ? "bg-[#e3f2fd] text-[#0088cc] shadow"
+                : "hover:bg-[#f1f5f9] text-gray-600"
+                }`}
             >
               {tab.name}
             </button>
           ))}
           <button
             onClick={handleLogout}
-            className="ml-2 px-4 py-2 bg-[#ff5c5c] hover:bg-[#e44c4c] text-white rounded-md font-medium transition duration-200"
+            className="ml-4 px-5 py-2 bg-[#ff5c5c] hover:bg-[#e44c4c] text-white rounded-full font-medium transition duration-200 shadow"
           >
             Log out
           </button>
@@ -54,7 +62,7 @@ function Home(): JSX.Element {
       </header>
 
       {/* Main Content */}
-      <main className="p-6">{tabs[num].component}</main>
+      <main className="">{tabs[num].component}</main>
     </div>
   );
 }
