@@ -1,5 +1,4 @@
-import { jwtDecode } from "jwt-decode";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { token } from "../../../store/TokenContext";
 import user from "../../../store/accountContext";
 import { MessageDto } from "../ChatBox/ChatBox";
@@ -20,11 +19,11 @@ export function InsertMessage({ props }: InsertMessageProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const onMouse = () => {
-    setShowOption(!showOption);
+    setShowOption((prev) => !prev);
   };
 
   const isDelete = () => {
-    if (window.confirm("Are you sure you want to delete this message ?")) {
+    if (window.confirm("Are you sure you want to delete this message?")) {
       fetch(`http://localhost:8080/chats/delete/${msg.id}`, {
         method: "DELETE",
         headers: {
@@ -33,75 +32,133 @@ export function InsertMessage({ props }: InsertMessageProps) {
       }).then(() => {
         socketService.emit("delete_message", { otherId: conversationId });
         if (contentRef.current) {
-          contentRef.current.innerHTML = "<b>Message has been delete</b>";
+          contentRef.current.innerHTML = "<b>Message has been deleted</b>";
         }
         setShowOption(false);
       });
     }
   };
 
+  // Telegram-like style
+  const isMine = msg.user?.id === user.id;
+
   return (
     <div
-      className={
-        msg.user?.id === user.id ? "message-right" : "message-left"
-      }
+      className={`flex w-full mb-2 ${isMine ? "justify-end" : "justify-start"}`}
     >
-      <div className="transparent"></div>
-      <div className="message-wrap">
-        {showOption && msg.user?.id === user.id && (
-          <div className="option-chat">
-            <button onClick={isDelete}>D.Hard</button>
-            <button onClick={() => setShowDate(!showDate)}>More</button>
+      <div
+        className={`flex items-end max-w-[75%] ${isMine ? "flex-row-reverse" : ""
+          }`}
+      >
+        {/* Avatar for others */}
+        {!isMine && (
+          <div className="mr-2">
+            <img
+              src={
+                msg.user?.avatarUrl ||
+                "https://ui-avatars.com/api/?name=U"
+              }
+              alt="avatar"
+              className="w-8 h-8 rounded-full border border-gray-200"
+            />
           </div>
         )}
-        <div className="wrap-option">
-          {msg.user?.id !== user.id && (
-            <div className="user-coming">{msg.user?.firstName + " " + msg.user?.lastName}</div>
-          )}
-          <div className="user-content" onClick={onMouse}>
-            <i className="message-content" ref={contentRef}>
+
+        {/* Message bubble */}
+        <div className="relative group">
+          <div
+            className={`
+              px-4 py-2 rounded-2xl shadow
+              ${isMine
+                ? "bg-[#e3f2fd] text-[#222] rounded-br-md"
+                : "bg-white text-[#222] border border-gray-200 rounded-bl-md"
+              }
+              cursor-pointer transition
+              hover:ring-2 hover:ring-[#b3e5fc]
+            `}
+            onClick={onMouse}
+            ref={contentRef}
+          >
+            {/* Sender name for group/others */}
+            {!isMine && (
+              <div className="text-xs font-semibold text-[#0088cc] mb-1">
+                {msg.user?.firstName} {msg.user?.lastName}
+              </div>
+            )}
+            <span className="break-words">
               {content.map((item, index) => {
                 const isImage =
                   imageExtensions.some((ext) => item.endsWith("." + ext)) ||
                   item.startsWith("data:image") ||
-                  item.startsWith("https://");
+                  (item.startsWith("https://") &&
+                    (item.endsWith(".jpg") ||
+                      item.endsWith(".png") ||
+                      item.endsWith(".jpeg") ||
+                      item.endsWith(".gif")));
                 return isImage ? (
                   <a
                     href={item}
                     target="_blank"
                     rel="noopener noreferrer"
                     key={index}
+                    className="inline-block"
                   >
-                    <img src={item} alt="content" />
+                    <img
+                      src={item}
+                      alt="content"
+                      className="max-w-[220px] max-h-[220px] rounded-lg my-1 border border-gray-200"
+                    />
                   </a>
                 ) : (
-                  item + " "
+                  <span key={index}>{item + " "}</span>
                 );
               })}
-            </i>
+            </span>
+            {/* Timestamp */}
+            <div className="flex justify-end mt-1">
+              <span className="text-[11px] text-gray-400">
+                {msg.timestamp
+                  ? new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                  : ""}
+              </span>
+            </div>
           </div>
-          {showDate && (
-            <div>
-              <i
-                style={{
-                  color: "white",
-                  background: "green",
-                  fontSize: "12px",
-                  borderRadius: "20px",
-                  padding: "1px 3px",
-                }}
+
+          {/* Options menu */}
+          {showOption && (
+            <div
+              className={`absolute z-10 ${isMine ? "right-0" : "left-0"
+                } top-full mt-1 bg-white border border-gray-200 rounded shadow-md flex flex-col min-w-[100px]`}
+            >
+              {isMine && (
+                <button
+                  className="px-4 py-2 text-sm text-red-500 hover:bg-gray-100 rounded-t"
+                  onClick={isDelete}
+                >
+                  Delete
+                </button>
+              )}
+              <button
+                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b"
+                onClick={() => setShowDate((prev) => !prev)}
               >
-                {msg.timestamp?.toString()}
-              </i>
+                {showDate ? "Hide Info" : "Show Info"}
+              </button>
+            </div>
+          )}
+
+          {/* Date info */}
+          {showDate && (
+            <div className="mt-1 text-xs text-gray-500 bg-gray-50 rounded px-2 py-1 shadow">
+              {msg.timestamp
+                ? new Date(msg.timestamp).toLocaleString()
+                : "No date"}
             </div>
           )}
         </div>
-        {showOption && msg.user?.id !== user.id && (
-          <div className="option-chat">
-            <button>Delete</button>
-            <button onClick={() => setShowDate(!showDate)}>More</button>
-          </div>
-        )}
       </div>
     </div>
   );
