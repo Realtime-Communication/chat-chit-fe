@@ -61,7 +61,7 @@ export const postFriendRequest = async (requestId: number) => {
   return response.json();
 };
 
-export const fetchFriendAP = async () => {
+export const fetchFriendAddParticipant = async () => {
   const response = await fetch(
     `http://localhost:8080/friends?page=1&size=100`,
     {

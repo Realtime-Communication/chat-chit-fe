@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './AddParticipant.scss';
 import { AddParticipantProps, FriendAP } from '../../../../api/User.int';
-import { addParticipantToConversation, fetchFriendAP } from '../../../../api/User.api';
+import { addParticipantToConversation, fetchFriendAddParticipant } from '../../../../api/User.api';
 
 
 export const AddParticipant: React.FC<AddParticipantProps> = ({
@@ -20,7 +20,7 @@ export const AddParticipant: React.FC<AddParticipantProps> = ({
 
   const fetchFriends = async () => {
     try {
-      const data = await fetchFriendAP();
+      const data = await fetchFriendAddParticipant();
       if (data.statusCode === 200) {
         const acceptedFriends = data.data.result.filter(
           (friend: FriendAP) => friend.status === 'ACCEPTED'
