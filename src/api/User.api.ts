@@ -94,3 +94,18 @@ export const addParticipantToConversation = async (conversationId: number , body
   }
   return response.json();
 };
+
+export const getCurrentUser = async () => {
+  const response = await fetch("http://localhost:8080/users/me", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch current user");
+  }
+
+  return response.json(); // Trả về dữ liệu người dùng
+};

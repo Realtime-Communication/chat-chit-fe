@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Picker, { Theme, EmojiStyle } from "emoji-picker-react";
-import "./emoji.scss";
 type EmojiObject = { emoji: string };
 
 export default function Emoji(props: { value: any; }) {

@@ -42,7 +42,7 @@ const Login: React.FC = () => {
         {alertTag && <div className="mb-4">{alertTag}</div>}
 
         <h2 className="text-2xl font-semibold text-center text-[#0088cc] mb-6">
-          Welcome to Talk Together
+          Welcome to Chat Chit
         </h2>
 
         <form onSubmit={handleFormSubmit} className="space-y-4">

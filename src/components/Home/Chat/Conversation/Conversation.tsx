@@ -1,5 +1,4 @@
 import React, {
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -7,8 +6,6 @@ import React, {
   DragEvent,
 } from "react";
 // Removed: import "./Conversation.scss";
-import { token } from "../../../store/TokenContext";
-import AddParticipant from "./AddParticipant";
 import user from "../../../store/accountContext";
 import socketService from "../../../../socket/Socket";
 import { useConversation } from "../../../../hook/ConversationContext";
@@ -36,9 +33,6 @@ export function Conversation() {
   const [showCreateConversation, setShowCreateConversation] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<FriendRequest | null>(null);
   const [conversationTitle, setConversationTitle] = useState("");
-  const [showAddParticipant, setShowAddParticipant] = useState(false);
-  const [selectedConversation, setSelectedConversation] =
-    useState<IConversation | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
   const [showFriendSelection, setShowFriendSelection] = useState(false);

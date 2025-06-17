@@ -1,8 +1,8 @@
 import { useState } from "react";
-import Users from "./garbage/Users";
 import Posts from "./garbage/Posts";
 import Chat from "./Chat/ChatPage";
 import { ConversationProvider } from "../../hook/ConversationContext";
+import Profile from "./Profile/Profile";
 
 function Home(): JSX.Element {
   const [num, setNum] = useState<number>(0);
@@ -16,8 +16,8 @@ function Home(): JSX.Element {
         </ConversationProvider>
       ),
     },
-    { name: "Users", component: <Users /> },
-    { name: "Posts", component: <Posts /> },
+    { name: "Profile", component: <Profile /> },
+    { name: "Friends", component: <Posts /> },
   ];
 
   const handleLogout = () => {
@@ -45,8 +45,8 @@ function Home(): JSX.Element {
               key={index}
               onClick={() => setNum(index)}
               className={`flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-full font-medium transition duration-200 text-base ${num === index
-                  ? "bg-[#e3f2fd] text-[#0088cc] shadow"
-                  : "hover:bg-[#f1f5f9] text-gray-600"
+                ? "bg-[#e3f2fd] text-[#0088cc] shadow"
+                : "hover:bg-[#f1f5f9] text-gray-600"
                 }`}
             >
               {tab.name}
