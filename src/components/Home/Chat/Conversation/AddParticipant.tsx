@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { token } from '../../../store/TokenContext';
 import './AddParticipant.scss';
 import { AddParticipantProps, FriendAP } from '../../../../api/User.int';
+import { addParticipantToConversation, fetchFriendAP } from '../../../../api/User.api';
 
 
 export const AddParticipant: React.FC<AddParticipantProps> = ({
@@ -20,15 +20,7 @@ export const AddParticipant: React.FC<AddParticipantProps> = ({
 
   const fetchFriends = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8080/friends?page=1&size=100`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      const data = await response.json();
+      const data = await fetchFriendAP();
       if (data.statusCode === 200) {
         const acceptedFriends = data.data.result.filter(
           (friend: FriendAP) => friend.status === 'ACCEPTED'
@@ -50,23 +42,13 @@ export const AddParticipant: React.FC<AddParticipantProps> = ({
     setLoading(true);
     setError('');
 
-    try {
-      const response = await fetch(
-        `http://localhost:8080/conversations/${conversationId}/participants`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            email: selectedEmail,
-            type: 'MEMBER'
-          })
-        }
-      );
+    const body = {
+      email: selectedEmail,
+      type: 'MEMBER'
+    };
 
-      const data = await response.json();
+    try {
+      const data = await addParticipantToConversation(conversationId, body);
       if (data.statusCode === 201) {
         onParticipantAdded();
         onClose();

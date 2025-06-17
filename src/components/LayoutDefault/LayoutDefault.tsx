@@ -1,5 +1,4 @@
 import { Outlet } from "react-router-dom";
-import "./LayoutDefault.scss";
 
 function LayoutDefault() {
   return (

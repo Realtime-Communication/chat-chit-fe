@@ -61,3 +61,36 @@ export const postFriendRequest = async (requestId: number) => {
   return response.json();
 };
 
+export const fetchFriendAP = async () => {
+  const response = await fetch(
+    `http://localhost:8080/friends?page=1&size=100`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch friends");
+  }
+  const data = await response.json();
+  return data;
+};
+
+export const addParticipantToConversation = async (conversationId: number , body: Record<string, any>) => {
+  const response = await fetch(
+    `http://localhost:8080/conversations/${conversationId}/participants`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    }
+  );
+  if (!response.ok) {
+    throw new Error("Failed to add participant to conversation");
+  }
+  return response.json();
+};
