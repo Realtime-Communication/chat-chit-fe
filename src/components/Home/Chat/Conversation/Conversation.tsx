@@ -15,7 +15,7 @@ import {
 }
   from "../../../../api/User.int";
 import { createConversation, fetchConversationsAPI, updateImageUrl, uploadImage } from "../../../../api/Chat.api";
-import { addFriend, fetchFriendRequestedAPI, fetchFriendsAPI, postFriendRequest } from "../../../../api/User.api";
+import { addFriend, fetchFriendRequestedAPI, fetchFriendsAPI, acceptFriendRequest } from "../../../../api/User.api";
 
 export function Conversation() {
   const { conversationId, setConversationId, isShowRecent, setIsShowRecent } =
@@ -256,7 +256,7 @@ export function Conversation() {
 
   const handleFriendRequest = async (requestId: number, accept: boolean) => {
     try {
-      const data = await postFriendRequest(requestId);
+      const data = await acceptFriendRequest(requestId);
       if (data.statusCode === 201) {
         const friendRequest = friendRequests.find(
           (req) => req.id === requestId
