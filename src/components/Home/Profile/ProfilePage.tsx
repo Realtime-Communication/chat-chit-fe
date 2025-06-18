@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getCurrentUser, updateUser } from "../../../api/User.api";
 
-const Profile: React.FC = () => {
+const ProfilePage: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any>({});
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState<any>({});
@@ -147,4 +147,4 @@ const Profile: React.FC = () => {
   );
 };
 
-export default Profile;
+export default ProfilePage;

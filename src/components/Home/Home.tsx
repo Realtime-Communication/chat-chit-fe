@@ -2,7 +2,8 @@ import { useState } from "react";
 import Posts from "./garbage/Posts";
 import Chat from "./Chat/ChatPage";
 import { ConversationProvider } from "../../hook/ConversationContext";
-import Profile from "./Profile/Profile";
+import ProfilePage from "./Profile/ProfilePage";
+import FriendPage from "./Friends/FriendPage";
 
 function Home(): JSX.Element {
   const [num, setNum] = useState<number>(0);
@@ -16,8 +17,9 @@ function Home(): JSX.Element {
         </ConversationProvider>
       ),
     },
-    { name: "Profile", component: <Profile /> },
-    { name: "Friends", component: <Posts /> },
+    { name: "Profile", component: <ProfilePage /> },
+    { name: "Friends", component: <FriendPage /> },
+    // { name: "Posts", component: <Posts /> },
   ];
 
   const handleLogout = () => {
