@@ -1,6 +1,7 @@
-import { token } from "../components/store/TokenContext";
+import { token } from "../components/store/TokenContext";1
 
 export const addFriend = async (body: Record<string, any>) => {
+  
   const response = await fetch(`http://localhost:8080/friends`, {
     method: "POST",
     headers: {
@@ -47,8 +48,8 @@ export const fetchFriendsAPI = async () => {
   return data;
 };
 
-export const postFriendRequest = async (requestId: number) => {
-  const response = await fetch(`http://localhost:8080/friends/${requestId}/accept`, {
+export const acceptFriendRequest = async (friendshipId: number) => {
+  const response = await fetch(`http://localhost:8080/friends/${friendshipId}/accept`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -56,10 +57,55 @@ export const postFriendRequest = async (requestId: number) => {
     },
   });
   if (!response.ok) {
-    throw new Error("Failed to post friend request");
+    throw new Error("Failed to accept friend request");
   }
   return response.json();
 };
+
+export const rejectFriendRequest = async (friendshipId: number) => {
+  const response = await fetch(`http://localhost:8080/friends/${friendshipId}/reject`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to reject friend request");
+  }
+  return response.json();
+};
+
+export const cancelFriendRequest = async (friendshipId: number) => {
+  const response = await fetch(`http://localhost:8080/friends/${friendshipId}/cancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to cancel friend request");
+  }
+  return response.json();
+};
+
+export const unfriend = async (friendId: number) => {
+  const response = await fetch(`http://localhost:8080/friends/${friendId}/unfriend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to unfriend");
+  }
+  return response.json();
+};
+
+// Kept for backward compatibility
+const postFriendRequest = acceptFriendRequest;
 
 export const fetchFriendAddParticipant = async () => {
   const response = await fetch(
@@ -110,6 +156,21 @@ export const getCurrentUser = async () => {
   return response.json(); // Trả về dữ liệu người dùng
 };
 
+export const getUserById = async (userId: number) => {
+  const response = await fetch(`http://localhost:8080/users/${userId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch user by ID");
+  }
+
+  return response.json();
+};
+
 export const updateUser = async (body: Record<string, any>) => {
   const response = await fetch("http://localhost:8080/users", {
     method: "PATCH",
@@ -128,7 +189,7 @@ export const updateUser = async (body: Record<string, any>) => {
 };
 
 export const getAllFriends = async () => {
-  const response = await fetch("http://localhost:8080/friends?page=1&size=10&order=desc", {
+  const response = await fetch("http://localhost:8080/friends?page=1&size=10&search=n&order=desc", {
     headers: {
       Authorization: `Bearer ${token}`,
     },

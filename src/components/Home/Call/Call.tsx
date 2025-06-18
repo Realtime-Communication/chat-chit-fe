@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
 import socketService from "../../../socket/Socket";
-import user from "../../store/accountContext";
+import user, { Account } from "../../store/accountContext";
 import { useCall } from "../../../hook/CallContext";
 import { CallDto, CallResponseDto, CallStatus, CallType, MessageType, User } from "../../../api/Chat.int";
 
@@ -14,7 +14,7 @@ function VideoCall() {
   const [myConversationState, setMyConversationState] = useState<CallDto | undefined>(undefined);
   const [stream, setStream] = useState<MediaStream | undefined>(undefined);
   const [receivingCall, setReceivingCall] = useState(false);
-  const [caller, setCaller] = useState<User | undefined>(undefined);
+  const [caller, setCaller] = useState<Account | undefined>(undefined);
   const [callerSignal, setCallerSignal] = useState<string>("");
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);

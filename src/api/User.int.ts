@@ -158,6 +158,29 @@ export interface User {
   is_active: boolean;
 }
 
+export interface DetailedUser {
+  id: number;
+  phone: string;
+  email: string;
+  password: string;
+  firstName: string;
+  type: string;
+  middleName: string;
+  lastName: string;
+  isActive: boolean;
+  isReported: boolean | null;
+  isBlocked: boolean;
+  preferences: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserResponse {
+  statusCode: number;
+  message: string;
+  data: DetailedUser;
+}
+
 export interface FriendAP {
   id: number;
   requester_id: number;

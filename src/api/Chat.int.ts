@@ -27,8 +27,8 @@ export enum MessageStatus {
 }
 
 export enum ParticipantType {
-  lead,
-  member,
+  lead = 'lead',
+  member = 'member',
 }
 
 export enum FriendStatus {
@@ -67,6 +67,7 @@ export interface User {
   id: number;
   sid: string;
   email: string;
+  username: string;
   firstName: string;
   lastName: string;
   avatarUrl: string;

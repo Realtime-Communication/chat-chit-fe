@@ -13,6 +13,7 @@ import socketService from "../../../../socket/Socket";
 import { useConversation } from "../../../../hook/ConversationContext";
 import { useCall } from "../../../../hook/CallContext";
 import VideoCall from "../../Call/Call";
+import UserInfoPanel from "./UserInfoPanel";
 import {
   CallDto, CallResponseDto, ConversationType, ConversationVm,
   MessageDto, MessageResponse, MessageType, OtherInfo
@@ -99,6 +100,7 @@ export function ChatBox() {
     number | undefined
   >(undefined);
   const [coop, setCoop] = useState<string>("");
+  const [showUserInfoPanel, setShowUserInfoPanel] = useState<boolean>(false);
 
   useEffect(() => {
     if (conversationId) {
@@ -145,13 +147,17 @@ export function ChatBox() {
     }
   }, [currentHeightOfChats]);
 
-  const fetchChat = () => {
-    const respone = getChatByConversationId(conversationId ?? -1, chatLimit);
+  const fetchChat = () => {    const respone = getChatByConversationId(conversationId ?? -1, chatLimit);
     respone
       .then((res) => res.json())
       .then((data: MessageResponse) => {
+        console.log("Fetched messages:", data);
         if (data.data) {
           setChatsFriendRecent(data.data.result || []);
+        }
+        if (data.data.result.length === 0) {
+          setShowLoad(false);
+          setChatsFriendRecent([]);
         }
         const messages = document.querySelector(
           "#messages"
@@ -161,22 +167,34 @@ export function ChatBox() {
         }
         setShowLoad(false);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error("Error fetching chat:", err)
+        setChatsFriendRecent([]);
+        setShowLoad(false);
+      });
   };
 
   useEffect(() => {
     if (!conversationId) {
       setChatsFriendRecent([]);
-    } else fetchChat();
+      setMessageRecent([]);
+    } else {
+      fetchChat();
+    }
   }, [conversationId]);
 
   useEffect(() => {
+    console.log("Chats updated:", chatsFriendRecent);
     const old: JSX.Element[] = [];
     chatsFriendRecent.forEach((msg) => {
-      old.push(<InsertMessage props={[msg, conversationId]} />);
+      old.push(<InsertMessage key={msg.id || Math.random()} props={[msg, conversationId]} />);
     });
     setMessageRecent(old);
-  }, [chatsFriendRecent]);
+  }, [chatsFriendRecent, conversationId]);
+
+  useEffect(() => {
+    console.log("MessageRecent updated:", messageRecent.length);
+  }, [messageRecent]);
 
   function onSubmit(
     event:
@@ -225,10 +243,12 @@ export function ChatBox() {
   };
 
   const handleComingMessage = (msg: any) => {
+    console.log("Incoming message:", msg);
     if (msg.conversationId == conversationId) {
+      console.log("Adding message to current conversation");
       setMessageRecent((prev) => [
         ...prev,
-        <InsertMessage props={[msg, conversationId]} />,
+        <InsertMessage key={msg.id || Math.random()} props={[msg, conversationId]} />,
       ]);
       return;
     } else {
@@ -251,17 +271,40 @@ export function ChatBox() {
     socketService.listen("messageComing", handleComingMessage);
     return () =>
       socketService.offListener("messageComing", handleComingMessage);
-  }, [conversationId, messageRecent]);
+  }, [conversationId]);
 
   useEffect(() => {
     const messages = document.querySelector(
       "#messages"
     ) as HTMLDivElement | null;
-    if (autoScroll && messages) messages.scrollTop = messages.scrollHeight;
-  }, [messageRecent]);
+    if (autoScroll && messages) {
+      console.log("Auto scrolling to bottom");
+      messages.scrollTop = messages.scrollHeight;
+    }
+  }, [messageRecent, autoScroll]);
 
   const checkProfile = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Profile logic
+    setShowUserInfoPanel(true);
+  };
+
+  const showCurrentUserProfile = () => {
+    // Create a temporary otherInfo for current user display
+    const currentUserInfo = {
+      name: `${user.firstName} ${user.lastName}`,
+      image: user.avatarUrl || "/user/friend.png",
+      type: ConversationType.FRIEND,
+      participants: [], // Empty to indicate current user
+    };
+    setOtherInfo(currentUserInfo);
+    setShowUserInfoPanel(true);
+  };
+
+  const showOtherUserProfile = () => {
+    // Restore the original otherInfo
+    if (conversationInfo) {
+      setOtherInfo(getOtherInfo(conversationInfo, user.id));
+    }
+    setShowUserInfoPanel(true);
   };
 
   useEffect(() => {
@@ -337,13 +380,10 @@ export function ChatBox() {
             <span className="material-icons">menu</span>
           </button>
           <img
-            className="w-12 h-12 rounded-full object-cover border border-[#4fbc6b]"
-            // src={
-            //   otherInfo.image ||
-            //   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s"
-            // }
+            className="w-12 h-12 rounded-full object-cover border border-[#4fbc6b] cursor-pointer hover:opacity-80 transition"
             src={"/user/friend.png"}
             alt="avatar"
+            onClick={showOtherUserProfile}
           />
           <div className="flex flex-col">
             <span className="text-black font-semibold text-lg">
@@ -355,27 +395,30 @@ export function ChatBox() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <button
-            className="p-2 rounded-full bg-[#4fbc6b] hover:bg-[#43a85c] transition"
-            onClick={goCall}
-            title="Call"
-          >
-            <img
-              className="w-6 h-6"
-              src={
-                isCall == "none"
-                  ? "https://cdn-icons-png.flaticon.com/128/901/901141.png"
-                  : "https://cdn-icons-png.flaticon.com/128/9999/9999340.png"
-              }
-              alt="call"
-            />
-          </button>
+          {otherInfo.type !== ConversationType.GROUP && (
+            <button
+              className="p-2 rounded-full bg-[#4fbc6b] hover:bg-[#43a85c] transition"
+              onClick={goCall}
+              title="Call"
+            >
+              <img
+                className="w-6 h-6"
+                src={
+                  isCall == "none"
+                    ? "https://cdn-icons-png.flaticon.com/128/901/901141.png"
+                    : "https://cdn-icons-png.flaticon.com/128/9999/9999340.png"
+                }
+                alt="call"
+              />
+            </button>
+          )}
           <div className="flex items-center gap-2">
             <span className="text-black text-sm">You</span>
             <img
-              className="w-10 h-10 rounded-full object-cover border border-[#4fbc6b]"
+              className="w-10 h-10 rounded-full object-cover border border-[#4fbc6b] cursor-pointer hover:opacity-80 transition"
               src="/user/friend.png"
               alt="me"
+              onClick={showCurrentUserProfile}
             />
           </div>
         </div>
@@ -390,20 +433,39 @@ export function ChatBox() {
         id="messages"
         onScroll={overScroll}
       >
+        {/* Debug info - remove in production */}
+        <div className="text-xs text-gray-500 mb-2">
+          Debug: {messageRecent.length} messages, {chatsFriendRecent.length} chats
+        </div>
+        
         {showLoad && (
           <div className="flex justify-center mb-2">
             <span className="text-xs text-gray-400">Loading previous messages...</span>
           </div>
         )}
-        {(messageRecent || []).map((item, index) => (
-          <React.Fragment key={index}>{item}</React.Fragment>
-        ))}
+        {messageRecent && messageRecent.length > 0 ? (
+          messageRecent.map((item, index) => (
+            <React.Fragment key={`message-${index}`}>{item}</React.Fragment>
+          ))
+        ) : (
+          <div className="flex justify-center items-center h-32 text-gray-400">
+            <span>No messages yet. Start a conversation!</span>
+          </div>
+        )}
       </div>
 
       {/* Video Call */}
       <div className="fixed inset-0 z-50" style={{ display: isCall }}>
         {callWindow}
       </div>
+
+      {/* User Info Panel */}
+      <UserInfoPanel
+        isOpen={showUserInfoPanel}
+        onClose={() => setShowUserInfoPanel(false)}
+        otherInfo={otherInfo}
+        conversationInfo={conversationInfo}
+      />
 
       {/* Chat Input */}
       <div className="px-6 py-4 border-t border-gray-200 bg-white rounded">
