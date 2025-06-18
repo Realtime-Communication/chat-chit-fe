@@ -18,6 +18,9 @@ import {
   MessageDto, MessageResponse, MessageType, OtherInfo
 } from "../../../../api/Chat.int";
 import { getChatByConversationId, getConversationById } from "../../../../api/Chat.api";
+import ProfilePanel from '../../Profile/ProfilePanel';
+import { getUserById } from '../../../../api/User.api';
+import { UserProfile } from '../../../../api/User.int';
 
 // Function to get other info from conversation
 const getOtherInfo = (
@@ -32,7 +35,7 @@ const getOtherInfo = (
     };
   }
 
-  if (conversation.type === ConversationType.GROUP) {
+  if (conversation.conversationType  === ConversationType.GROUP) {
     return {
       name: conversation.title,
       image: "", // You might want to add a group image field to ConversationVm
@@ -99,6 +102,8 @@ export function ChatBox() {
     number | undefined
   >(undefined);
   const [coop, setCoop] = useState<string>("");
+  const [profilePanelUser, setProfilePanelUser] = useState<UserProfile | null>(null);
+  const [profilePanelOpen, setProfilePanelOpen] = useState(false);
 
   useEffect(() => {
     if (conversationId) {
@@ -193,7 +198,7 @@ export function ChatBox() {
     if (input?.value.trim()) {
       const msg: MessageDto = {
         conversationId: conversationId,
-        conversationType: conversationInfo?.type,
+        conversationType: conversationInfo?.conversationType,
         messageType: MessageType.text,
         content: input.value,
       };
@@ -325,147 +330,169 @@ export function ChatBox() {
     }
   };
 
+  const handleAvatarClick = async () => {
+    // Only for friend (not group)
+    if (conversationInfo && conversationInfo.conversationType === ConversationType.FRIEND) {
+      // Find the other participant
+      const otherParticipant = conversationInfo.participants?.find(
+        (p) => p.userId !== user.id
+      );
+      if (otherParticipant) {
+        try {
+          const res = await getUserById(otherParticipant.userId);
+          setProfilePanelUser(res.data);
+          setProfilePanelOpen(true);
+        } catch (err) {
+          setProfilePanelUser(null);
+          setProfilePanelOpen(false);
+        }
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full w-full bg-gray-100 border rounded">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border border-gray-200 bg-[#0088cc]">
-        <div className="flex items-center gap-3">
-          <button
-            className="md:hidden text-black text-xl"
-            onClick={() => setIsShowRecent(!isShowRecent)}
-          >
-            <span className="material-icons">menu</span>
-          </button>
-          <img
-            className="w-12 h-12 rounded-full object-cover border border-[#4fbc6b]"
-            // src={
-            //   otherInfo.image ||
-            //   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdeJLB5FW0B08j_swtauclJvI1vSoDFNIgjQ&s"
-            // }
-            src={"/user/friend.png"}
-            alt="avatar"
-          />
-          <div className="flex flex-col">
-            <span className="text-black font-semibold text-lg">
-              {otherInfo ? otherInfo.name : "All"}
-            </span>
-            {coop && (
-              <span className="text-xs text-[#4fbc6b]">{coop}</span>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <button
-            className="p-2 rounded-full bg-[#4fbc6b] hover:bg-[#43a85c] transition"
-            onClick={goCall}
-            title="Call"
-          >
-            <img
-              className="w-6 h-6"
-              src={
-                isCall == "none"
-                  ? "https://cdn-icons-png.flaticon.com/128/901/901141.png"
-                  : "https://cdn-icons-png.flaticon.com/128/9999/9999340.png"
-              }
-              alt="call"
-            />
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="text-black text-sm">You</span>
-            <img
-              className="w-10 h-10 rounded-full object-cover border border-[#4fbc6b]"
-              src="/user/friend.png"
-              alt="me"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Alerts */}
-      {alertTag && <div className="px-6 pt-2">{alertTag}</div>}
-
-      {/* Messages */}
-      <div
-        className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-gray-50"
-        id="messages"
-        onScroll={overScroll}
-      >
-        {showLoad && (
-          <div className="flex justify-center mb-2">
-            <span className="text-xs text-gray-400">Loading previous messages...</span>
-          </div>
-        )}
-        {(messageRecent || []).map((item, index) => (
-          <React.Fragment key={index}>{item}</React.Fragment>
-        ))}
-      </div>
-
-      {/* Video Call */}
-      <div className="fixed inset-0 z-50" style={{ display: isCall }}>
-        {callWindow}
-      </div>
-
-      {/* Chat Input */}
-      <div className="px-6 py-4 border-t border-gray-200 bg-white rounded">
-        <form
-          id="form"
-          className="flex items-end gap-2"
-          onSubmit={onSubmit}
-          autoComplete="off"
-        >
-          <div className="relative flex-1">
-            <textarea
-              ref={inputRef}
-              onInput={typing}
-              onClick={() => {
-                setIsEmoji(false);
-                inputRef?.current?.focus();
-                if (inputRef.current)
-                  inputRef.current.scrollTop = inputRef.current.scrollHeight;
-              }}
-              onKeyDown={(e) =>
-                e.key === "Enter" && !e.shiftKey
-                  ? submitRef?.current?.click()
-                  : undefined
-              }
-              className="w-full resize-none rounded-2xl px-4 py-3 bg-gray-100 text-black border border-[#4fbc6b] focus:outline-none"
-              placeholder="Type a message..."
-              id="input"
-              rows={1}
-              autoComplete="on"
-              style={{ minHeight: "44px", maxHeight: "120px" }}
-            />
+    <>
+      {profilePanelOpen && (
+        <ProfilePanel user={profilePanelUser} onClose={() => setProfilePanelOpen(false)} />
+      )}
+      <div className="flex flex-col h-full w-full bg-gray-100 border rounded">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border border-gray-200 bg-[#0088cc]">
+          <div className="flex items-center gap-3">
             <button
-              type="button"
-              className="absolute right-2 bottom-2 text-xl"
-              onClick={() => {
-                setIsEmoji(!isEmoji);
-                if (inputRef.current) {
-                  inputRef.current.focus();
-                  inputRef.current.scrollTop = inputRef.current.scrollHeight;
-                }
-              }}
-              tabIndex={-1}
+              className="md:hidden text-black text-xl"
+              onClick={() => setIsShowRecent(!isShowRecent)}
             >
-              <span>{isEmoji ? "🥰" : "😉"}</span>
+              <span className="material-icons">menu</span>
             </button>
-            {isEmoji && (
-              <div className="absolute left-0 bottom-12 z-10">
-                <Emoji value={inputRef} />
-              </div>
-            )}
+            <img
+              className="w-12 h-12 rounded-full object-cover border border-[#4fbc6b] cursor-pointer"
+              src={"/user/friend.png"}
+              alt="avatar"
+              onClick={handleAvatarClick}
+            />
+            <div className="flex flex-col">
+              <span className="text-black font-semibold text-lg">
+                {otherInfo ? otherInfo.name : "All"}
+              </span>
+              {coop && (
+                <span className="text-xs text-[#4fbc6b]">{coop}</span>
+              )}
+            </div>
           </div>
-          <button
-            ref={submitRef}
-            className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-full px-6 py-2 font-semibold transition"
-            onClick={onSubmit}
-            type="submit"
+          <div className="flex items-center gap-4">
+            <button
+              className="p-2 rounded-full bg-[#4fbc6b] hover:bg-[#43a85c] transition"
+              onClick={goCall}
+              title="Call"
+            >
+              <img
+                className="w-6 h-6"
+                src={
+                  isCall == "none"
+                    ? "https://cdn-icons-png.flaticon.com/128/901/901141.png"
+                    : "https://cdn-icons-png.flaticon.com/128/9999/9999340.png"
+                }
+                alt="call"
+              />
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-black text-sm">You</span>
+              <img
+                className="w-10 h-10 rounded-full object-cover border border-[#4fbc6b]"
+                src="/user/friend.png"
+                alt="me"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Alerts */}
+        {alertTag && <div className="px-6 pt-2">{alertTag}</div>}
+
+        {/* Messages */}
+        <div
+          className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-gray-50"
+          id="messages"
+          onScroll={overScroll}
+        >
+          {showLoad && (
+            <div className="flex justify-center mb-2">
+              <span className="text-xs text-gray-400">Loading previous messages...</span>
+            </div>
+          )}
+          {(messageRecent || []).map((item, index) => (
+            <React.Fragment key={index}>{item}</React.Fragment>
+          ))}
+        </div>
+
+        {/* Video Call */}
+        <div className="fixed inset-0 z-50" style={{ display: isCall }}>
+          {callWindow}
+        </div>
+
+        {/* Chat Input */}
+        <div className="px-6 py-4 border-t border-gray-200 bg-white rounded">
+          <form
+            id="form"
+            className="flex items-end gap-2"
+            onSubmit={onSubmit}
+            autoComplete="off"
           >
-            Send
-          </button>
-        </form>
+            <div className="relative flex-1">
+              <textarea
+                ref={inputRef}
+                onInput={typing}
+                onClick={() => {
+                  setIsEmoji(false);
+                  inputRef?.current?.focus();
+                  if (inputRef.current)
+                    inputRef.current.scrollTop = inputRef.current.scrollHeight;
+                }}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && !e.shiftKey
+                    ? submitRef?.current?.click()
+                    : undefined
+                }
+                className="w-full resize-none rounded-2xl px-4 py-3 bg-gray-100 text-black border border-[#4fbc6b] focus:outline-none"
+                placeholder="Type a message..."
+                id="input"
+                rows={1}
+                autoComplete="on"
+                style={{ minHeight: "44px", maxHeight: "120px" }}
+              />
+              <button
+                type="button"
+                className="absolute right-2 bottom-2 text-xl"
+                onClick={() => {
+                  setIsEmoji(!isEmoji);
+                  if (inputRef.current) {
+                    inputRef.current.focus();
+                    inputRef.current.scrollTop = inputRef.current.scrollHeight;
+                  }
+                }}
+                tabIndex={-1}
+              >
+                <span>{isEmoji ? "🥰" : "😉"}</span>
+              </button>
+              {isEmoji && (
+                <div className="absolute left-0 bottom-12 z-10">
+                  <Emoji value={inputRef} />
+                </div>
+              )}
+            </div>
+            <button
+              ref={submitRef}
+              className="bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-full px-6 py-2 font-semibold transition"
+              onClick={onSubmit}
+              type="submit"
+            >
+              Send
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

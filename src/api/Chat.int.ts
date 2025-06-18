@@ -38,8 +38,8 @@ export enum FriendStatus {
 }
 
 export enum ConversationType {
-  GROUP,
-  FRIEND,
+  GROUP = 0,
+  FRIEND = 1,
 }
 
 export interface ConversationParticipant {
@@ -58,7 +58,7 @@ export interface ConversationVm {
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
-  type: ConversationType;
+  conversationType : ConversationType;
   participants?: ConversationParticipant[];
 }
 

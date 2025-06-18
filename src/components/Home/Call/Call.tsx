@@ -59,7 +59,7 @@ function VideoCall() {
 
     setMyConversationState({
       conversationId: conversation?.id,
-      conversationType: conversation?.type,
+      conversationType: conversation?.conversationType,
       content: `📞 We have a video call 📞 at ${new Date().toLocaleString(
         "en-US",
         {

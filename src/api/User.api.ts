@@ -126,3 +126,18 @@ export const updateUser = async (body: Record<string, any>) => {
 
   return response.json(); // Trả về dữ liệu user mới (nếu có)
 };
+
+export const getUserById = async (userId: number) => {
+  const response = await fetch(`http://localhost:8080/users/${userId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch user profile");
+  }
+
+  return response.json();
+};

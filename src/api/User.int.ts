@@ -172,3 +172,26 @@ export interface AddParticipantProps {
   onParticipantAdded: () => void;
   onClose: () => void;
 }
+
+export interface UserProfile {
+  id: number;
+  phone: string;
+  email: string;
+  password: string;
+  firstName: string;
+  type: string;
+  middleName: string;
+  lastName: string;
+  isActive: boolean;
+  isReported: boolean | null;
+  isBlocked: boolean;
+  preferences: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserProfileResponse {
+  statusCode: number;
+  message: string;
+  data: UserProfile;
+}
