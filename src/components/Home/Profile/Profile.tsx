@@ -1,17 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { getCurrentUser } from "../../../api/User.api";
+import { getCurrentUser, updateUser } from "../../../api/User.api";
 
 const Profile: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any>({});
+  const [editMode, setEditMode] = useState(false);
+  const [form, setForm] = useState<any>({});
 
   useEffect(() => {
     getCurrentUser()
-      .then((data) => setCurrentUser(data.data))
+      .then((data) => {
+        setCurrentUser(data.data);
+        setForm(data.data);
+      })
       .catch((err) => console.error("Error:", err));
   }, []);
 
-  const editProfile = () => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
+  const handleSave = async () => {
+    try {
+      // Only send allowed fields
+      const payload = {
+        email: currentUser.email,
+        firstName: form.firstName,
+        middleName: form.middleName,
+        lastName: form.lastName,
+        phone: form.phone,
+      };
+      await updateUser(payload);
+      setCurrentUser({ ...currentUser, ...payload });
+      setEditMode(false);
+    } catch (err) {
+      alert("Failed to update profile");
+    }
   };
 
   return (
@@ -19,8 +42,7 @@ const Profile: React.FC = () => {
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
           <img
-            // src={currentUser.avatarUrl}
-            src={"/user/friend.png"}
+            src={currentUser.avatarUrl || "/user/friend.png"}
             alt="avatar"
             className="w-28 h-28 rounded-full border-4 border-[#e3f2fd] shadow"
           />
@@ -29,44 +51,97 @@ const Profile: React.FC = () => {
         </div>
         <div className="text-center">
           <h2 className="text-2xl font-bold text-[#0088cc]">
-            {currentUser.firstName} {currentUser.lastName}
+            {form.firstName} {form.lastName}
           </h2>
         </div>
         <div className="w-full flex flex-col gap-2 mt-4">
           <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">Email</span>
-            <span className="text-gray-700">{currentUser.email}</span>
+            <span className="material-icons text-[#0088cc]">person</span>
+            {editMode ? (
+              <input
+                type="text"
+                name="firstName"
+                value={form.firstName || ""}
+                onChange={handleChange}
+                className="flex-1 px-2 py-1 rounded border border-gray-200"
+                placeholder="First Name"
+              />
+            ) : (
+              <span className="text-gray-700">{currentUser.firstName}</span>
+            )}
           </div>
-        </div>
-        <div className="w-full flex flex-col gap-2 mt-4">
           <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">First Name</span>
-            <span className="text-gray-700">{currentUser.firstName}</span>
+            <span className="material-icons text-[#0088cc]">person</span>
+            {editMode ? (
+              <input
+                type="text"
+                name="middleName"
+                value={form.middleName || ""}
+                onChange={handleChange}
+                className="flex-1 px-2 py-1 rounded border border-gray-200"
+                placeholder="Middle Name"
+              />
+            ) : (
+              <span className="text-gray-700">{currentUser.middleName}</span>
+            )}
           </div>
-        </div>
-        <div className="w-full flex flex-col gap-2 mt-4">
           <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">Middle Name</span>
-            <span className="text-gray-700">{currentUser.middleName}</span>
+            <span className="material-icons text-[#0088cc]">person</span>
+            {editMode ? (
+              <input
+                type="text"
+                name="lastName"
+                value={form.lastName || ""}
+                onChange={handleChange}
+                className="flex-1 px-2 py-1 rounded border border-gray-200"
+                placeholder="Last Name"
+              />
+            ) : (
+              <span className="text-gray-700">{currentUser.lastName}</span>
+            )}
           </div>
-        </div>
-        <div className="w-full flex flex-col gap-2 mt-4">
           <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">Last Name</span>
-            <span className="text-gray-700">{currentUser.lastName}</span>
+            <span className="material-icons text-[#0088cc]">phone</span>
+            {editMode ? (
+              <input
+                type="text"
+                name="phone"
+                value={form.phone || ""}
+                onChange={handleChange}
+                className="flex-1 px-2 py-1 rounded border border-gray-200"
+                placeholder="Phone"
+              />
+            ) : (
+              <span className="text-gray-700">{currentUser.phone}</span>
+            )}
           </div>
         </div>
-        <div className="w-full flex flex-col gap-2 mt-4">
-          <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">Phone</span>
-            <span className="text-gray-700">{currentUser.phone}</span>
+        {editMode ? (
+          <div className="flex gap-2 mt-6">
+            <button
+              className="px-6 py-2 bg-[#0088cc] hover:bg-[#007ab8] text-white rounded-full font-medium transition"
+              onClick={handleSave}
+            >
+              Save
+            </button>
+            <button
+              className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full font-medium transition"
+              onClick={() => {
+                setEditMode(false);
+                setForm(currentUser);
+              }}
+            >
+              Cancel
+            </button>
           </div>
-        </div>
-        <button className="mt-6 px-6 py-2 bg-[#0088cc] hover:bg-[#007ab8]
-         text-white rounded-full font-medium transition"
-          onClick={editProfile}>
-          Edit Profile
-        </button>
+        ) : (
+          <button
+            className="mt-6 px-6 py-2 bg-[#0088cc] hover:bg-[#007ab8] text-white rounded-full font-medium transition"
+            onClick={() => setEditMode(true)}
+          >
+            Edit Profile
+          </button>
+        )}
       </div>
     </div>
   );

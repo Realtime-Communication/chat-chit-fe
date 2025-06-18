@@ -109,3 +109,20 @@ export const getCurrentUser = async () => {
 
   return response.json(); // Trả về dữ liệu người dùng
 };
+
+export const updateUser = async (body: Record<string, any>) => {
+  const response = await fetch("http://localhost:8080/users", {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update user");
+  }
+
+  return response.json(); // Trả về dữ liệu user mới (nếu có)
+};
