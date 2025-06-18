@@ -1,6 +1,7 @@
-import { token } from "../components/store/TokenContext";
+import { token } from "../components/store/TokenContext";1
 
 export const addFriend = async (body: Record<string, any>) => {
+  
   const response = await fetch(`http://localhost:8080/friends`, {
     method: "POST",
     headers: {
@@ -185,6 +186,27 @@ export const updateUser = async (body: Record<string, any>) => {
   }
 
   return response.json(); // Trả về dữ liệu user mới (nếu có)
+};
+
+export const changePassword = async (body: {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}) => {
+  const response = await fetch("http://localhost:8080/users/change-password", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to change password");
+  }
+
+  return response.json();
 };
 
 export const getAllFriends = async (order: string,page: number, size: number, search: string, searchFields: string[]) => {

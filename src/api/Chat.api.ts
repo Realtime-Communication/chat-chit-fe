@@ -147,3 +147,39 @@ export const leaveGroup = async (conversationId: number, targetUserId: number) =
 
   return res.json();
 };
+
+export const deleteConversation = async (conversationId: number) => {
+  const res = await fetch('http://localhost:8080/conversations/delete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ conversationId }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to delete conversation');
+  }
+
+  return res.json();
+};
+
+export const addParticipant = async (conversationId: number, targetUserId: number) => {
+  const res = await fetch('http://localhost:8080/conversations/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ conversationId, targetUserId }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to add participant');
+  }
+
+  return res.json();
+};

@@ -395,21 +395,23 @@ export function ChatBox() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <button
-            className="p-2 rounded-full bg-[#4fbc6b] hover:bg-[#43a85c] transition"
-            onClick={goCall}
-            title="Call"
-          >
-            <img
-              className="w-6 h-6"
-              src={
-                isCall == "none"
-                  ? "https://cdn-icons-png.flaticon.com/128/901/901141.png"
-                  : "https://cdn-icons-png.flaticon.com/128/9999/9999340.png"
-              }
-              alt="call"
-            />
-          </button>
+          {otherInfo.type !== ConversationType.GROUP && (
+            <button
+              className="p-2 rounded-full bg-[#4fbc6b] hover:bg-[#43a85c] transition"
+              onClick={goCall}
+              title="Call"
+            >
+              <img
+                className="w-6 h-6"
+                src={
+                  isCall == "none"
+                    ? "https://cdn-icons-png.flaticon.com/128/901/901141.png"
+                    : "https://cdn-icons-png.flaticon.com/128/9999/9999340.png"
+                }
+                alt="call"
+              />
+            </button>
+          )}
           <div className="flex items-center gap-2">
             <span className="text-black text-sm">You</span>
             <img

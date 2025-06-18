@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ConversationType, ConversationParticipant } from "../../../../api/Chat.int";
-import { DetailedUser, UserResponse } from "../../../../api/User.int";
-import { getCurrentUser, getUserById } from "../../../../api/User.api";
-import { kickParticipant, leaveGroup } from "../../../../api/Chat.api";
+import { DetailedUser, UserResponse, Friend } from "../../../../api/User.int";
+import { getCurrentUser, getUserById, fetchFriendsAPI, getAllFriends } from "../../../../api/User.api";
+import { kickParticipant, leaveGroup, deleteConversation, addParticipant } from "../../../../api/Chat.api";
 import user from "../../../store/accountContext";
 import { toast } from "react-toastify";
 
@@ -18,6 +18,28 @@ interface UserInfoPanelProps {
   conversationInfo?: any;
 }
 
+interface FriendData {
+  id: number;
+  requesterId: number;
+  receiverId: number;
+  status: "ACCEPTED" | "PENDING" | "REJECTED";
+  createdAt: string;
+  requester: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    isActive: boolean;
+  };
+  receiver: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    isActive: boolean;
+  };
+}
+
 const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
   isOpen,
   onClose,
@@ -29,8 +51,14 @@ const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
   const [loading, setLoading] = useState(false);
   const [kicking, setKicking] = useState<number | null>(null);
   const [leaving, setLeaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [friends, setFriends] = useState<FriendData[]>([]);
+  const [selectedFriend, setSelectedFriend] = useState<FriendData | null>(null);
+  const [addingMembers, setAddingMembers] = useState(false);
+  const [friendsLoading, setFriendsLoading] = useState(false);
 
   const currentUserFromStore = user;
 
@@ -52,8 +80,7 @@ const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
       setKicking(participantId);
       await kickParticipant(conversationInfo.id, participantId);
       toast.success('Participant has been removed');
-      // Refresh the conversation or update the UI as needed
-      onClose(); // Close the panel to reflect changes
+      onClose();
     } catch (err) {
       console.error('Failed to kick participant:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to remove participant');
@@ -74,15 +101,107 @@ const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
       setLeaving(true);
       await leaveGroup(conversationInfo.id, currentUserFromStore.id);
       toast.success('You have left the group successfully');
-      onClose(); // Close the panel
-      // You might want to redirect or refresh the conversation list here
-      window.location.reload(); // Temporary solution - ideally should update the conversation list
+      onClose();
+      window.location.reload();
     } catch (err) {
       console.error('Failed to leave group:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to leave group');
     } finally {
       setLeaving(false);
     }
+  };
+
+  // Handle delete conversation
+  const handleDeleteConversation = async () => {
+    if (!conversationInfo?.id) return;
+    
+    const isGroup = otherInfo.type === ConversationType.GROUP;
+    const confirmMessage = isGroup 
+      ? 'Are you sure you want to delete this group? This action cannot be undone and all messages will be permanently lost.'
+      : 'Are you sure you want to delete this conversation? This action cannot be undone and all messages will be permanently lost.';
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    
+    try {
+      setDeleting(true);
+      const response = await deleteConversation(conversationInfo.id);
+      
+      if (response.data?.success) {
+        toast.success(response.data.message || 'Conversation deleted successfully');
+        onClose();
+        window.location.reload();
+      } else {
+        throw new Error(response.message || 'Failed to delete conversation');
+      }
+    } catch (err) {
+      console.error('Failed to delete conversation:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to delete conversation');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Handle add members to group
+  const handleAddMembers = async () => {
+    if (!conversationInfo?.id || !selectedFriend) return;
+    
+    try {
+      setAddingMembers(true);
+      
+      const otherFriend = getOtherFriend(selectedFriend);
+      await addParticipant(conversationInfo.id, otherFriend.id);
+      
+      toast.success(`${otherFriend.firstName} ${otherFriend.lastName} added successfully`);
+      setShowAddMember(false);
+      setSelectedFriend(null);
+      onClose();
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed to add member:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to add member');
+    } finally {
+      setAddingMembers(false);
+    }
+  };
+
+  // Toggle friend selection for adding to group
+  const toggleFriendSelection = (friend: FriendData) => {
+    setSelectedFriend(selectedFriend && selectedFriend.id === friend.id ? null : friend);
+  };
+
+  // Get the other friend from friendship data
+  const getOtherFriend = (friendship: FriendData) => {
+    if (friendship.requesterId === currentUserFromStore.id) {
+      return friendship.receiver;
+    } else {
+      return friendship.requester;
+    }
+  };
+
+  // Fetch friends for adding to group
+  const fetchFriends = async () => {
+    try {
+      setFriendsLoading(true);
+      const data = await getAllFriends("desc", 1, 100, "", ["firstName", "lastName", "email"]);
+      if (data.statusCode === 200) {
+        const friends: FriendData[] = data.data.result || [];
+        const acceptedFriends = friends.filter(friendship => friendship.status === "ACCEPTED");
+        setFriends(acceptedFriends);
+      }
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+      toast.error("Failed to load friends");
+    } finally {
+      setFriendsLoading(false);
+    }
+  };
+
+  // Check if a friend is already in the group
+  const isFriendInGroup = (friendId: number) => {
+    const existingParticipantIds = otherInfo.participants?.map(p => p.userId) || [];
+    return existingParticipantIds.includes(friendId);
   };
 
   // Check if we're showing current user info (when participants is empty)
@@ -121,11 +240,9 @@ const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
       
       try {
         if (isShowingCurrentUser) {
-          // Fetch current user detailed info
           const response: UserResponse = await getCurrentUser();
           setCurrentUser(response.data);
         } else if (otherParticipant) {
-          // Fetch other user detailed info
           const response: UserResponse = await getUserById(otherParticipant.userId);
           setOtherUser(response.data);
         }
@@ -218,7 +335,6 @@ const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
                     alt="avatar"
                     className="w-24 h-24 rounded-full object-cover border-4 border-[#e3f2fd] shadow-lg"
                   />
-                  {/* Online indicator */}
                   <span className="absolute bottom-2 right-2 w-6 h-6 bg-[#4fbc6b] border-2 border-white rounded-full"></span>
                 </div>
                 <h3 className="text-2xl font-bold text-[#0088cc] mt-4 text-center">
@@ -512,6 +628,32 @@ const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
                       Call
                     </button>
                   </div>
+
+                  {/* Delete Conversation Button */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <button
+                      onClick={handleDeleteConversation}
+                      disabled={deleting}
+                      className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg py-2 font-medium transition flex items-center justify-center gap-2"
+                    >
+                      {deleting ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete Conversation
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -538,34 +680,17 @@ const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
                     </div>
                   </div>
 
-                  {/* <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-800 mb-3">Group Members</h4>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {otherInfo.participants?.map((participant) => (
-                        <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100">
-                          <img
-                            src={participant.user.avatarUrl || "/user/friend.png"}
-                            alt="member"
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">
-                              {participant.user.firstName} {participant.user.lastName}
-                              {participant.userId === currentUserFromStore.id && " (You)"}
-                            </p>
-                            <p className="text-xs text-gray-500">{participant.user.email}</p>
-                          </div>
-                          <span className={`w-2 h-2 rounded-full ${participant.user.isActive ? 'bg-[#4fbc6b]' : 'bg-gray-400'}`}></span>
-                        </div>
-                      ))}
-                    </div>
-                  </div> */}
-
                   <div className="flex gap-3">
                     <button className="flex-1 bg-[#0088cc] hover:bg-[#007ab8] text-white rounded-lg py-2 font-medium transition">
                       Group Settings
                     </button>
-                    <button className="flex-1 bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-lg py-2 font-medium transition">
+                    <button 
+                      className="flex-1 bg-[#4fbc6b] hover:bg-[#43a85c] text-white rounded-lg py-2 font-medium transition"
+                      onClick={() => {
+                        setShowAddMember(true);
+                        fetchFriends();
+                      }}
+                    >
                       Add Member
                     </button>
                   </div>
@@ -595,11 +720,161 @@ const UserInfoPanel: React.FC<UserInfoPanelProps> = ({
                       )}
                     </button>
                   </div>
+
+                  {/* Delete Group Button */}
+                  {isCurrentUserAdmin && (
+                    <div className="border-t border-gray-200 pt-4">
+                      <button
+                        onClick={handleDeleteConversation}
+                        disabled={deleting}
+                        className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg py-2 font-medium transition flex items-center justify-center gap-2"
+                      >
+                        {deleting ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete Group
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </>
           )}
         </div>
+
+        {/* Add Member Modal */}
+        {showAddMember && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800">Add Members to Group</h3>
+                <button
+                  onClick={() => {
+                    setShowAddMember(false);
+                    setSelectedFriend(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6">
+                {friendsLoading ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4fbc6b] mx-auto mb-2"></div>
+                    <p>Loading friends...</p>
+                  </div>
+                ) : friends.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No friends available to add</p>
+                    <p className="text-sm mt-2">You don't have any friends to add to this group</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-2">Select a friend to add to the group:</p>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {friends.map((friendship) => {
+                          const otherFriend = getOtherFriend(friendship);
+                          const isInGroup = isFriendInGroup(otherFriend.id);
+                          
+                          return (
+                            <div
+                              key={friendship.id}
+                              className={`p-3 rounded-lg border transition ${
+                                isInGroup 
+                                  ? "bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed"
+                                  : selectedFriend && selectedFriend.id === friendship.id
+                                    ? "bg-[#4fbc6b] text-white border-[#4fbc6b] cursor-pointer"
+                                    : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-[#4fbc6b] hover:text-white hover:border-[#4fbc6b] cursor-pointer"
+                              }`}
+                              onClick={() => !isInGroup && toggleFriendSelection(friendship)}
+                            >
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src="/user/friend.png"
+                                  alt="avatar"
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium">
+                                    {otherFriend.firstName} {otherFriend.lastName}
+                                    {isInGroup && (
+                                      <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                                        Already in group
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-sm opacity-75">
+                                    {otherFriend.email}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`w-2 h-2 rounded-full ${
+                                    otherFriend.isActive ? 'bg-[#4fbc6b]' : 'bg-gray-400'
+                                  }`}></span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {selectedFriend && (
+                        <p className="text-sm text-gray-600 mt-2">
+                          Selected: {getOtherFriend(selectedFriend).firstName} {getOtherFriend(selectedFriend).lastName}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <button
+                        className="flex-1 bg-[#4fbc6b] hover:bg-[#43a85c] disabled:bg-gray-300 text-white rounded-lg py-2 font-medium transition flex items-center justify-center gap-2"
+                        onClick={handleAddMembers}
+                        disabled={!selectedFriend || addingMembers}
+                      >
+                        {addingMembers ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Adding...
+                          </>
+                        ) : selectedFriend ? (
+                          `Add ${getOtherFriend(selectedFriend).firstName} ${getOtherFriend(selectedFriend).lastName}`
+                        ) : (
+                          "Select a friend to add"
+                        )}
+                      </button>
+                      <button
+                        className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg py-2 font-medium transition"
+                        onClick={() => {
+                          setShowAddMember(false);
+                          setSelectedFriend(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
