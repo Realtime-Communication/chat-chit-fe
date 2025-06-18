@@ -126,3 +126,17 @@ export const updateUser = async (body: Record<string, any>) => {
 
   return response.json(); // Trả về dữ liệu user mới (nếu có)
 };
+
+export const getAllFriends = async () => {
+  const response = await fetch("http://localhost:8080/friends?page=1&size=10&search=n&order=desc", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch all friends");
+  }
+
+  return response.json(); // Trả về danh sách bạn bè
+};

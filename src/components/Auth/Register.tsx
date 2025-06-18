@@ -27,7 +27,7 @@ const Register: React.FC = () => {
       firstName: formData.firstName,
       middleName: formData.middleName,
       lastName: formData.lastName,
-      role: formData.role,
+      role: "USER",
       isActive: true,
       isReported: false,
       isBlocked: false,
@@ -156,7 +156,7 @@ const Register: React.FC = () => {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="block font-medium">Role</label>
             <select
               name="role"
@@ -167,7 +167,7 @@ const Register: React.FC = () => {
               <option value="USER">User</option>
               <option value="ADMIN">Admin</option>
             </select>
-          </div>
+          </div> */}
 
           <button
             type="submit"

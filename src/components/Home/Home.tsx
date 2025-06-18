@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Posts from "./garbage/Posts";
 import Chat from "./Chat/ChatPage";
 import { ConversationProvider } from "../../hook/ConversationContext";
 import ProfilePage from "./Profile/ProfilePage";
