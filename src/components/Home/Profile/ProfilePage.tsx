@@ -23,7 +23,6 @@ const ProfilePage: React.FC = () => {
     try {
       // Only send allowed fields
       const payload = {
-        email: currentUser.email,
         firstName: form.firstName,
         middleName: form.middleName,
         lastName: form.lastName,
@@ -56,7 +55,7 @@ const ProfilePage: React.FC = () => {
         </div>
         <div className="w-full flex flex-col gap-2 mt-4">
           <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">person</span>
+            <span className="font-medium w-28">First Name:</span>
             {editMode ? (
               <input
                 type="text"
@@ -71,7 +70,7 @@ const ProfilePage: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">person</span>
+            <span className="font-medium w-28">Middle Name:</span>
             {editMode ? (
               <input
                 type="text"
@@ -86,7 +85,7 @@ const ProfilePage: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">person</span>
+            <span className="font-medium w-28">Last Name:</span>
             {editMode ? (
               <input
                 type="text"
@@ -101,7 +100,11 @@ const ProfilePage: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="material-icons text-[#0088cc]">phone</span>
+            <span className="font-medium w-28">Email:</span>
+            <span className="text-gray-700">{currentUser.email}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-medium w-28">Phone:</span>
             {editMode ? (
               <input
                 type="text"

@@ -634,8 +634,7 @@ export function Conversation() {
         <div className="flex-1 flex flex-col overflow-y-auto">
           {conversationRecent.map((item) => (
             <div
-              className={`flex items-center gap-3 px-6 py-3 cursor-pointer hover:bg-[#232d36] transition ${conversationId === item.id ? "bg-[#232d36]" : ""
-                }`}
+              className={`recent-item flex items-center gap-3 px-6 py-3 cursor-pointer hover:bg-[#232d36] transition ${conversationId === item.id ? "bg-[#232d36]" : ""}`}
               onClick={handleClick}
               data-id={item.id}
               key={item.id}
