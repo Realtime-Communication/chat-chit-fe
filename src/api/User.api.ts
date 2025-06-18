@@ -128,7 +128,7 @@ export const updateUser = async (body: Record<string, any>) => {
 };
 
 export const getAllFriends = async () => {
-  const response = await fetch("http://localhost:8080/friends?page=1&size=10&search=n&order=desc", {
+  const response = await fetch("http://localhost:8080/friends?page=1&size=10&order=desc", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
